@@ -1,0 +1,31 @@
+# Architecture and repair contract
+
+The CLI and local browser call the same Python engine. The Linux adapter collects bounded live evidence locally or via OpenSSH. A deterministic rule set maps evidence into findings, hypotheses, and investigation steps. It never treats a hypothesis as a proven root cause.
+
+Repair flow:
+
+1. Collect read-only service state and validate the explicit service allowlist.
+2. Store a plan with target, service, exact command, observed-state fingerprint, expiry, risk, and verification criteria.
+3. Display the plan and receive explicit operator approval.
+4. Revalidate target, allowlist, expiry, and service state.
+5. Atomically consume the approval before dispatch. Duplicate applications fail closed.
+6. Run a fixed argv command without a local shell; strict input validation also prevents remote shell metacharacters in SSH command arguments.
+7. Collect fresh service state and record verified or needs_attention. Never automatically retry.
+
+SQLite transactions serialize local plan changes; an active plan prevents duplicate planning for the same target and service. A network timeout means the remote outcome may be unknown. No database transaction can make a remote command exactly-once across all failure modes; the engine deliberately chooses no automatic retries.
+
+The browser has no arbitrary target selection, command input, or credential entry. POST APIs require a per-process session token, an allowed Host, and an absent or matching Origin. Responses disable caching and framing. Dynamic evidence uses textContent, not HTML interpolation. This is local account isolation, not an authentication system for shared hosting.
+
+## Adapter quality gate
+
+Before adding another integration, require:
+
+- A narrow read-only collector with bounded timeouts and explicit scope.
+- Findings that cite collected facts and name missing evidence.
+- Fixed, allowlisted repair actions and a documented blast radius.
+- A target/state-bound, expiring approval contract for every mutation.
+- Tool-specific verification and honest rollback limitations.
+- Fixtures for common failure cases, negative approval tests, and disposable live acceptance results.
+- Documentation listing supported versions, prerequisites, unsupported cases, and permission requirements.
+
+Provider responses and logs are untrusted data. Future LLM-generated explanations may describe evidence; model output must never become an executable command. Future adapters should generalize the currently service-specific plan schema rather than pretending Linux service restarts cover other systems.
