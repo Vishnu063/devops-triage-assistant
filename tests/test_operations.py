@@ -53,6 +53,16 @@ class ProfileTests(unittest.TestCase):
         with self.assertRaises(ValueError):prod.approve(plan['id'])
         self.assertEqual(prod.adapter.calls,0)
 
+    def test_named_profile_keeps_local_linux_transport_local(self):
+        args=cli.parser().parse_args(['--state-dir',self.tmp.name,'diagnose'])
+        args.profile_context={'profile':'staging','environment':'staging'}
+        engine=cli.make_engine(args,{})
+        report=engine.scan()
+        self.assertEqual(engine.adapter._adapter.target,'local')
+        self.assertIn(':profile:',engine.adapter.target)
+        self.assertIn('disk_used_percent',report['snapshot'])
+        self.assertEqual(report['setup_help']['configured_target'],'local')
+
 
 class OperationTests(unittest.TestCase):
     def setUp(self):
