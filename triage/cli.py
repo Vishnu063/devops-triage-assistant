@@ -21,6 +21,7 @@ def parser():
     p.add_argument('--health-url',help='Optional application endpoint; HTTPS or loopback HTTP')
     p.add_argument('--state-dir',help='Private local state directory')
     sub=p.add_subparsers(dest='action',required=True)
+    demo=sub.add_parser('demo',help='Show isolated sample incidents without infrastructure or AI');demo.add_argument('--scenario',choices=['docker-oom','kubernetes-image','linux-disk'],default='docker-oom')
     sub.add_parser('tools');sub.add_parser('setup',help='Interactive connection wizard')
     sub.add_parser('validate',help='Validate scoped read access without changing resources')
     sub.add_parser('health',help='Check the configured application endpoint')
@@ -50,6 +51,10 @@ def make_engine(args,configurations,tool=None):
 def main():
     p=parser();args=p.parse_args()
     try:
+        if args.action=='demo':
+            from .investigation import demo_report, overview
+            sample=demo_report(args.scenario);sample['overview']=overview(sample)
+            print(json.dumps(sample,indent=2));return
         config_path=args.config or 'connections.json'
         configurations=load_configuration(config_path) if Path(config_path).expanduser().exists() else {}
         wizard=ConnectionWizard(config_path,configurations)
