@@ -95,6 +95,23 @@ class AITests(unittest.TestCase):
                 self.assertEqual(ai.explain(report())['status'], 'unavailable')
         self.assertFalse(ai._LOCK.locked())
 
+    def test_known_health_and_disk_overclaims_are_withheld(self):
+        sample=report()
+        with patch.object(ai,'_local_models',return_value=[ai.DEFAULT_MODEL]),patch.object(ai,'_request',return_value={'done':True,'message':{'content':'The application is healthy. Disk usage is within acceptable limits.'}}):
+            response=ai.explain(sample)
+        self.assertEqual(response['status'],'unreliable')
+        self.assertNotIn('explanation',response)
+        self.assertIn('unsupported_application_health_claim',response['validation_flags'])
+        self.assertIn('disk_pressure_downplayed',response['validation_flags'])
+
+    def test_real_small_model_benchmark_regressions_are_withheld(self):
+        from pathlib import Path
+        from triage.investigation import demo_report
+        measured=json.loads((Path(__file__).resolve().parents[1]/'docs/OLLAMA_INITIAL_BENCHMARK.json').read_text())
+        for case in measured['benchmark']['cases']:
+            flags=ai.contradictions(case['explanation'],ai.evidence_summary(demo_report(case['scenario'])))
+            self.assertTrue(flags,case['scenario'])
+
     def test_oversized_transport_response_rejected(self):
         from unittest.mock import MagicMock
         connection = MagicMock();response = connection.getresponse.return_value
