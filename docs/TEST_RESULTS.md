@@ -1,8 +1,14 @@
-# Test results — v0.3, 2026-10-16
+# Test results — v0.4, 2026-10-17
 
-**203 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 206 cases: those 203 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
+**228 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 232 cases: those 228 plus three opt-in Docker cases and one opt-in Kubernetes case, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
 
 Command: `python -m unittest discover -s tests -v`
+
+## Operations update
+
+Local discovery: **232 cases, 228 passed, four opt-in acceptance cases skipped** (three Docker and one Kubernetes). The new tests cover ownership-scoped Kubernetes failure types and deployment comparisons, private-body exclusion, denied-versus-missing configuration, bounded/incomplete results, profile target isolation, private profile saves, repair follow-up comparisons, linked escalation outcomes, incident search, CI failure policies, prerequisite guidance and synthetic benchmark behavior.
+
+Separate real Kubernetes and Ollama CPU acceptance workflows are included. Their measured results will be recorded here once completed; local fixture tests do not establish live cluster compatibility, actual model RAM usage or answer quality. The browser suite now also exercises profiles, prerequisite hints, evidence bundles, rechecks, incident search and escalation downloads.
 
 ## First-use and investigation update
 
