@@ -87,7 +87,10 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                 if not isinstance(selected, str):
                     raise ValueError("Tool ID must be a string")
                 if self.path == "/api/doctor":
-                    return self.respond(200,setup_status(selected,(configurations or {}).get(selected)))
+                    native=(factory('linux').adapter if factory else engine.adapter) if selected=='linux' else None
+                    native=getattr(native,'_adapter',native)
+                    target=native.target if native else 'local'
+                    return self.respond(200,setup_status(selected,(configurations or {}).get(selected),linux_target=target))
                 if self.path in ("/api/connection/schema", "/api/connection/save"):
                     if wizard is None:raise ValueError("Connection wizard is unavailable")
                     if self.path.endswith("schema"):
