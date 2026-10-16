@@ -23,7 +23,7 @@ class ExperienceEngine:
             report['deep_evidence']=deep_evidence(self.adapter)
             report['findings'].extend(report['deep_evidence'].get('findings',[]))
         from .operations import setup_status
-        report['setup_help']=setup_status(getattr(self.adapter,'tool','linux'),getattr(self.adapter,'config',{}),report['snapshot'].get('errors',[])+report.get('deep_evidence',{}).get('errors',[]))
+        report['setup_help']=setup_status(getattr(self.adapter,'tool','linux'),getattr(self.adapter,'config',{}),report['snapshot'].get('errors',[])+report.get('deep_evidence',{}).get('errors',[]),linux_target=getattr(getattr(self.adapter,'_adapter',self.adapter),'target','local'))
         report['application_health']=check_health(self.health)
         if report['application_health']['healthy'] is False:
             report['findings'].append({'code':'application-health','title':'Configured application endpoint did not meet its health policy',
