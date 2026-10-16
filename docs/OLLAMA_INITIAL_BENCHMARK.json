@@ -1,0 +1,70 @@
+{
+  "runtime_version": "0.40.5",
+  "model_digest": "a8b0c51577010a279d933d14c2a8ab4b268079d44c5c8830c0a93900f1827c67",
+  "source_commit": "23a07681e6628295adc2c5bd4b1bfe40b04878f0",
+  "run": "https://github.com/Vishnu063/devops-triage-assistant/actions/runs/38963682749",
+  "review": "Transport succeeded, but answers included unsupported health/image claims and downplayed 96% disk use. These examples motivated withholding known contradictions. Small-model answers are not a substitute for guided evidence. This is not a model accuracy score.",
+  "benchmark": {
+    "status": "completed",
+    "model": "qwen2.5:0.5b",
+    "hardware": {
+      "system": "Linux",
+      "machine": "x86_64",
+      "cpu_count": 4
+    },
+    "cases": [
+      {
+        "scenario": "docker-oom",
+        "latency_ms": 4827,
+        "status": "ok",
+        "explanation": "The findings are as follows:\n\n- `docker:oom`: This indicates a potential issue with the Docker environment, likely related to memory usage.\n- `metrics`: No specific metrics are provided, but it suggests the system is not functioning correctly.\n- `log_signature_counts`: The number of log signatures is 3, which is not relevant to the issue.\n- `application_healthy`: The system is not healthy, indicating potential issues with the application.\n- `scope`: The system is filtered, meaning no raw logs, configuration, identity, topology, or change history are available.\n\nThe system is not healthy, and the cause of the issue is not specified. The only relevant information is the presence of an `oom` error, which suggests a memory leak or resource exhaustion. To diagnose the issue, the engineer should investigate the application logs, identify the application code, and ensure that the application is not using excessive resources.",
+        "metrics": {
+          "total_duration": 4824658974,
+          "load_duration": 1038790693,
+          "prompt_eval_count": 172,
+          "eval_count": 185,
+          "eval_duration": 3131254000
+        },
+        "topic_keyword_present": true,
+        "review_required": true,
+        "message": null
+      },
+      {
+        "scenario": "kubernetes-image",
+        "latency_ms": 2200,
+        "status": "ok",
+        "explanation": "The findings are as follows:\n\n- The Kubernetes image is present.\n- There are no metrics available.\n- The log signature count for the image is 4.\n- The collection is incomplete.\n- The application is healthy.\n- The scope is \"Filtered sample only. No raw logs, configuration, identity, topology or change history.\"",
+        "metrics": {
+          "total_duration": 2198122956,
+          "load_duration": 534176040,
+          "prompt_eval_count": 172,
+          "eval_count": 67,
+          "eval_duration": 1035848999
+        },
+        "topic_keyword_present": true,
+        "review_required": true,
+        "message": null
+      },
+      {
+        "scenario": "linux-disk",
+        "latency_ms": 2808,
+        "status": "ok",
+        "explanation": "The findings are as follows:\n\n- Disk pressure detected: 96%\n- Memory usage: 38%\n- Load: 0.4%\n- CPU count: 2\n- Disk usage is within acceptable limits\n- No specific cause is identified\n- The application is healthy\n- No raw logs, configuration, identity, topology, or change history are provided\n\nThe application is healthy and the disk pressure is within acceptable limits. No specific cause is identified.",
+        "metrics": {
+          "total_duration": 2805672395,
+          "load_duration": 533749167,
+          "prompt_eval_count": 204,
+          "eval_count": 96,
+          "eval_duration": 1525649000
+        },
+        "topic_keyword_present": true,
+        "review_required": true,
+        "message": null
+      }
+    ],
+    "peak_ollama_process_tree_rss_bytes": 561311744,
+    "peak_reported_model_bytes": 458804427,
+    "scope": "Synthetic cases only. RSS sampling includes the supplied Ollama process and descendants, can double-count shared pages, and is not an isolated RAM minimum. Model size is not RAM usage. Keyword checks are not answer-quality validation.",
+    "manual_review": "Review each answer for unsupported root-cause claims, missing evidence and unsafe advice before using this model operationally."
+  }
+}
