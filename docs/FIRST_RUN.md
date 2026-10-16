@@ -46,3 +46,12 @@ After an attempted repair, check the timeline and reported verification scope. R
 ## Get help with a useful report
 
 Include your OS, Python version, commit, selected integration, exact command or dashboard step, and redacted error. Do not attach credentials, private connection files, or complete live reports. Use the repository's **Report a problem** issue form.
+
+
+## See a result before connecting anything
+
+Click **Docker out of memory**, **Kubernetes image pull** or **Linux disk full** at the top of the dashboard. These are clearly marked synthetic examples. Ask one of the six guided questions to see the observed evidence, possible cause and next checks. No connection, AI model, cloud resource or repair is needed.
+
+Choose **Leave sample mode** when ready. Use the integration search to find one tool, follow **Setup checklist**, save its connection and validate read access. The connection banner distinguishes missing settings, saved settings, checked access and collected evidence. A collector's successful read does not establish full tool health.
+
+After checks, the overview separates finding count, collection completeness and application health. Use **What next?** for concrete investigation steps. AI is optional and disabled by default. Finish or cancel a pending repair plan before switching incidents.

@@ -2,7 +2,16 @@
 
 [Reviewer walkthrough](INTERVIEW.md) · [Portfolio](https://github.com/Vishnu063/Vishnu063/blob/main/PORTFOLIO.md)
 
-Understand live evidence, investigate likely causes, and review a specific repair before approving it.
+Investigate a failing container or deployment with evidence, guided questions and optional local AI. Review the exact repair before approving it.
+
+**Start small:** try a sample incident, connect one tool, and see what to check next. No API key is required for guided diagnosis. Optional Ollama explanations run locally.
+
+- **Try it without infrastructure:** three isolated sample incidents for Docker memory, Kubernetes image pulls and Linux disk pressure.
+- **Understand the result:** a short incident overview, application-health status, evidence references and a practical next step.
+- **Ask about the incident:** six guided topics, with optional local AI follow-ups. Chat never runs commands or authorizes repairs.
+- **Share carefully:** download a filtered summary without target names, raw evidence or configuration.
+
+[Quick walkthrough](docs/QUICK_WALKTHROUGH.md) · [First run](docs/FIRST_RUN.md) · [Local AI](docs/LOCAL_AI.md) · [Contribute](CONTRIBUTING.md)
 
 **v0.3: Linux plus 60 tool profiles, connection setup and incident recovery workflows.** Automated coverage includes profiles, approval controls, health policies, previews, rollback and incident history. Most provider responses and resource mutations use fixtures. Docker also has three passing real acceptance cases in a disposable GitHub CI lab; production and other-tool acceptance remain pending. See [test results and limits](docs/TEST_RESULTS.md) and the [disposable Docker lab](docs/DOCKER_LAB.md).
 
@@ -31,7 +40,7 @@ bash start.sh
 
 The launcher creates a local Python environment, installs the assistant, and starts the dashboard. No manual activation or system-wide pip installation is needed. The first run needs internet access; later starts reuse the installation.
 
-Open **http://127.0.0.1:8765** on the same computer. Select a tool, open **Connection wizard**, save its settings, and click **Validate connection**. Linux checks are available immediately; other tools need their native CLI or API credentials. The launcher installs only the assistant.
+Open **http://127.0.0.1:8765** on the same computer. Click **Docker out of memory** for a sample first, or select a tool, open **Connection wizard**, save its settings, and click **Validate connection**. Linux checks are available immediately; other tools need their native CLI or API credentials. The launcher installs only the assistant.
 
 **Next time:** run `bash start.sh` from this folder. Press **Ctrl+C** to stop. CLI commands work through the same launcher:
 
@@ -83,6 +92,26 @@ The default model download is approximately **398 MB**; runtime RAM is higher an
 Only finding codes, numeric Linux metrics, log signature counts and health/collection flags are sent to `127.0.0.1:11434`. Raw logs, credentials, target names, configuration and free-text evidence are excluded. This intentionally limits how specific AI advice can be. AI output is displayed as untrusted plain text and cannot create, approve or execute repair plans. Requests are manual, serialized and bounded; failures leave the original report available. No model is downloaded automatically, and cloud-backed models are excluded. Model/API checks use automated fixtures and a real loopback HTTP test; real model inference and answer quality have **not** been acceptance-tested here.
 
 See [local AI setup and troubleshooting](docs/LOCAL_AI.md).
+
+## Try a sample first
+
+No cloud account, Docker daemon, Kubernetes cluster or model is needed:
+
+```bash
+bash start.sh demo
+bash start.sh demo --scenario kubernetes-image
+bash start.sh demo --scenario linux-disk
+```
+
+These commands print synthetic evidence and suggested checks. In the dashboard, the three sample buttons also enable guided questions. Sample mode is clearly marked and does not collect live data, call AI, write incidents or expose executable repair actions. **Leave sample mode** returns to live setup. The selected live integration remains visible and independent of the sample.
+
+## Investigate in plain language
+
+After live checks, read the overview and ask **What happened?**, **Likely cause?**, **What next?**, **What changed?**, **Safe to repair?** or **Application healthy?** The default answers are deterministic guidance based on the selected stored sample, not generative AI. Unsupported questions explain the six available topics. No fresh evidence or commands are requested by chat.
+
+Enable local AI and select **Also ask local AI** for an optional explanation of a supported topic. Only the canonical topic and the existing filtered evidence reach Ollama; raw questions are not sent to the model or stored in incident history. Chat replies remain in the browser until the sample changes or the page reloads. Keep secrets out of questions.
+
+**Download filtered summary** exports limited numeric metrics, finding codes and collection/health flags for the latest live sample. Review it before sharing. The full evidence and target identifiers are deliberately omitted.
 
 ## Start with Linux
 

@@ -1,8 +1,14 @@
 # Test results — v0.3, 2026-10-16
 
-**188 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 191 cases: those 188 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
+**203 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 206 cases: those 203 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
 
 Command: `python -m unittest discover -s tests -v`
+
+## First-use and investigation update
+
+Local full discovery: **206 cases, 203 passed, three opt-in Docker cases skipped**. Fifteen new tests verify isolated synthetic samples, bounded guided questions, no chat-authorized execution, incomplete evidence and application-health wording, filtered summary export, CLI demo independence, authenticated sample APIs, latest-incident matching, and canonical-topic-only Ollama follow-ups.
+
+The updated wheel built successfully. JavaScript syntax, relative Markdown links and whitespace checks passed. Local browser launch was unavailable because the Chromium download failed. **The real desktop/mobile browser workflow passed** on implementation commit `8b70c64a5ef807bef8143591597021f86d9d71fc`: [passing run and screenshots](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/38957325022). It exercised sample flows, guided questions, integration search, missing-connection errors, the connection wizard, live Linux diagnosis and filtered downloads. Desktop and mobile captures were visually reviewed; no horizontal mobile overflow or browser script errors were reported. This is scoped browser verification, not a full accessibility audit. Python 3.11/3.12/3.13, packaging, documentation and the disposable real Docker lab also passed on this implementation.
 
 ## Optional local Ollama update
 
@@ -38,7 +44,7 @@ This validates this scoped Docker workflow in the CI environment, not arbitrary 
 | Evidence and confidence | Signature-only log extraction, unsupported-deep-collector reporting, differences between samples and cautious multi-source hypotheses | No proof of topology or causation from correlation alone |
 | Timeline and alerts | Persistent evidence records, local deduplication, acknowledgement and authenticated HTTP endpoints | Local/on-demand alerts, not email/Slack delivery or unattended monitoring |
 | Privacy and transports | Projection exclusions, malformed credential validation, actual bounded Python subprocesses, stderr handling, actual loopback requests, redirects and response limits | Not an exhaustive security audit |
-| Dashboard API | Session/host/origin controls, tool selection, wizard save/validate, timeline, alerts, correlation and existing approval flows | Rendered browser behavior and accessibility were not visually inspected |
+| Dashboard API | Session/host/origin controls, tool selection, wizard save/validate, timeline, alerts, correlation and existing approval flows | First-use desktop/mobile flows also passed real browser checks with reviewed screenshots; a full accessibility audit remains pending |
 | Linux | Actual local read-only measurements and simulated systemd failures | Remote SSH and real failed-unit restarts remain pending |
 
 ## Installed-package checks

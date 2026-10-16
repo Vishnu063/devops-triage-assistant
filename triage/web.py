@@ -6,6 +6,7 @@ import secrets
 from .integrations import catalog
 from .evidence import correlate
 from . import ai
+from .investigation import demo_report, overview, answer, share_summary, QUESTIONS
 
 
 def make_handler(engine, token, port, factory=None, configurations=None, wizard=None):
@@ -53,10 +54,19 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                 body = json.loads(self.rfile.read(size))
                 if not isinstance(body, dict):
                     raise ValueError("Body must be a JSON object")
+                if body.get("demo") is True and self.path not in ("/api/demo", "/api/investigate"):
+                    raise ValueError("Sample mode cannot access live actions; leave sample mode first")
                 if self.path == "/api/tools":
                     return self.respond(200, {"default": getattr(engine.adapter, "tool", "linux"), "tools": catalog(configurations or {})})
                 if self.path == "/api/ai/status":
                     return self.respond(200, ai.status())
+                if self.path == "/api/demo":
+                    report = demo_report(body.get("scenario", "docker-oom"))
+                    report['overview'] = overview(report)
+                    return self.respond(200, report)
+                if self.path == "/api/investigate" and body.get("demo") is True:
+                    report = demo_report(body.get("scenario", "docker-oom"))
+                    return self.respond(200, answer(report, body.get("question")))
                 selected = body.get("tool", getattr(engine.adapter, "tool", "linux"))
                 if not isinstance(selected, str):
                     raise ValueError("Tool ID must be a string")
@@ -67,7 +77,21 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                     if not isinstance(body.get("config"),dict):raise ValueError("Connection config must be an object")
                     return self.respond(200,wizard.save(selected,body["config"]))
                 active = factory(selected) if factory else engine
-                if self.path == "/api/ai/explain":
+                if self.path in ("/api/investigate", "/api/summary"):
+                    _, report = active.store.latest(active.adapter.target)
+                    if not report or not body.get("incident") or report.get("incident_id") != body["incident"]:
+                        raise ValueError("Run fresh checks for this target before investigating it")
+                    if self.path == "/api/summary":
+                        result = share_summary(report)
+                    else:
+                        result = answer(report, body.get("question"))
+                        if body.get("ai") is True:
+                            if body.get("enabled") is not True:
+                                raise ValueError("Enable local AI explicitly before requesting it")
+                            if result['intent'] is None:
+                                raise ValueError("Choose one of the six guided topics for an AI follow-up")
+                            result['ai'] = ai.explain(report, body.get("model", ai.DEFAULT_MODEL), QUESTIONS[result['intent']])
+                elif self.path == "/api/ai/explain":
                     if body.get("enabled") is not True:
                         raise ValueError("Enable local AI explicitly before requesting an explanation")
                     _, report = active.store.latest(active.adapter.target)
@@ -76,6 +100,7 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                     result = ai.explain(report, body.get("model", ai.DEFAULT_MODEL))
                 elif self.path == "/api/scan":
                     result = active.scan(deep=True) if body.get("deep") else active.scan()
+                    result["overview"] = overview(result)
                 elif self.path == "/api/validate":
                     result = active.validate_connection()
                 elif self.path == "/api/timeline":

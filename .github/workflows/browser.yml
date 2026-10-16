@@ -1,0 +1,37 @@
+name: Dashboard first-use checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m pip install .
+      - name: Install browser test tools outside the project
+        run: |
+          npm install --prefix "$RUNNER_TEMP/triage-browser" playwright@1.56.1
+          "$RUNNER_TEMP/triage-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Exercise desktop and mobile workflows
+        run: node tests/browser_smoke.cjs
+        env:
+          NODE_PATH: ${{ runner.temp }}/triage-browser/node_modules
+          TRIAGE_BROWSER_ARTIFACTS: ${{ runner.temp }}/triage-browser-artifacts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dashboard-browser-screenshots
+          path: ${{ runner.temp }}/triage-browser-artifacts/*.png
+          if-no-files-found: ignore
