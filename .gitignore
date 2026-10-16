@@ -10,3 +10,5 @@ dist/
 *.db-*
 *.pem
 *.key
+/connections.json
+/connections.*.json

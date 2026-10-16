@@ -1,0 +1,252 @@
+{
+  "tools": {
+    "aws": {
+      "profile": null,
+      "region": null,
+      "resource": null
+    },
+    "azure": {
+      "group": null,
+      "resource": null,
+      "subscription": null
+    },
+    "gcp": {
+      "project": null,
+      "resource": null,
+      "zone": null
+    },
+    "digitalocean": {
+      "context": null,
+      "resource": null
+    },
+    "oci": {
+      "profile": null,
+      "region": null,
+      "resource": null
+    },
+    "docker": {
+      "context": null,
+      "resource": null
+    },
+    "podman": {
+      "context": null,
+      "resource": null
+    },
+    "containerd": {
+      "namespace": null,
+      "socket": null
+    },
+    "compose": {
+      "context": null,
+      "directory": null,
+      "project": null
+    },
+    "buildah": {
+      "resource": null
+    },
+    "kubernetes": {
+      "context": null,
+      "namespace": null,
+      "resource": null
+    },
+    "helm": {
+      "context": null,
+      "namespace": null,
+      "resource": null
+    },
+    "kustomize": {
+      "directory": null
+    },
+    "argocd": {
+      "resource": null,
+      "server": null
+    },
+    "flux": {
+      "context": null,
+      "namespace": null,
+      "resource": null
+    },
+    "jenkins": {
+      "resource": null,
+      "base_url": null,
+      "headers": {}
+    },
+    "github-actions": {
+      "owner": null,
+      "repository": null,
+      "resource": null,
+      "base_url": null,
+      "headers": {}
+    },
+    "gitlab-ci": {
+      "project": null,
+      "resource": null,
+      "base_url": null,
+      "headers": {}
+    },
+    "azure-pipelines": {
+      "organization": null,
+      "project": null,
+      "resource": null,
+      "base_url": null,
+      "headers": {}
+    },
+    "tekton": {
+      "context": null,
+      "namespace": null,
+      "resource": null
+    },
+    "terraform": {
+      "directory": null
+    },
+    "opentofu": {
+      "directory": null
+    },
+    "pulumi": {
+      "directory": null,
+      "stack": null
+    },
+    "cloudformation": {
+      "profile": null,
+      "region": null,
+      "resource": null
+    },
+    "cdk": {
+      "profile": null,
+      "region": null,
+      "resource": null
+    },
+    "ansible": {
+      "inventory": null
+    },
+    "puppet": {
+      "resource": null
+    },
+    "chef": {
+      "resource": null
+    },
+    "salt": {
+      "resource": null
+    },
+    "cloud-init": {},
+    "prometheus": {
+      "base_url": null,
+      "headers": {}
+    },
+    "grafana": {
+      "base_url": null,
+      "headers": {}
+    },
+    "datadog": {
+      "resource": null,
+      "base_url": null,
+      "headers": {}
+    },
+    "zabbix": {
+      "resource": null,
+      "base_url": null,
+      "headers": {}
+    },
+    "cloudwatch": {
+      "profile": null,
+      "region": null,
+      "resource": null
+    },
+    "elasticsearch": {
+      "base_url": null,
+      "headers": {}
+    },
+    "logstash": {
+      "base_url": null,
+      "headers": {}
+    },
+    "kibana": {
+      "base_url": null,
+      "headers": {}
+    },
+    "loki": {
+      "base_url": null,
+      "headers": {}
+    },
+    "jaeger": {
+      "base_url": null,
+      "headers": {}
+    },
+    "trivy": {
+      "image": null
+    },
+    "snyk": {
+      "directory": null
+    },
+    "sonarqube": {
+      "project": null,
+      "base_url": null,
+      "headers": {}
+    },
+    "gitleaks": {
+      "directory": null
+    },
+    "semgrep": {
+      "directory": null,
+      "rules": null
+    },
+    "vault": {
+      "base_url": null,
+      "headers": {}
+    },
+    "secrets-manager": {
+      "profile": null,
+      "region": null,
+      "resource": null
+    },
+    "azure-key-vault": {
+      "resource": null,
+      "subscription": null,
+      "vault": null
+    },
+    "keycloak": {
+      "base_url": null,
+      "headers": {}
+    },
+    "teleport": {
+      "base_url": null,
+      "headers": {}
+    },
+    "nginx": {
+      "base_url": null,
+      "headers": {}
+    },
+    "haproxy": {
+      "base_url": null,
+      "headers": {}
+    },
+    "traefik": {
+      "base_url": null,
+      "headers": {}
+    },
+    "istio": {
+      "context": null,
+      "namespace": null
+    },
+    "envoy": {
+      "base_url": null,
+      "headers": {}
+    },
+    "postgresql": {
+      "service": null
+    },
+    "mysql": {
+      "credentials_file": null
+    },
+    "redis": {
+      "host": null,
+      "port": null
+    },
+    "mongodb": {},
+    "kafka": {
+      "bootstrap": null,
+      "credentials_file": null,
+      "resource": null
+    }
+  }
+}
