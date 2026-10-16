@@ -5,6 +5,7 @@ from pathlib import Path
 import secrets
 from .integrations import catalog
 from .evidence import correlate
+from . import ai
 
 
 def make_handler(engine, token, port, factory=None, configurations=None, wizard=None):
@@ -54,6 +55,8 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                     raise ValueError("Body must be a JSON object")
                 if self.path == "/api/tools":
                     return self.respond(200, {"default": getattr(engine.adapter, "tool", "linux"), "tools": catalog(configurations or {})})
+                if self.path == "/api/ai/status":
+                    return self.respond(200, ai.status())
                 selected = body.get("tool", getattr(engine.adapter, "tool", "linux"))
                 if not isinstance(selected, str):
                     raise ValueError("Tool ID must be a string")
@@ -64,7 +67,14 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                     if not isinstance(body.get("config"),dict):raise ValueError("Connection config must be an object")
                     return self.respond(200,wizard.save(selected,body["config"]))
                 active = factory(selected) if factory else engine
-                if self.path == "/api/scan":
+                if self.path == "/api/ai/explain":
+                    if body.get("enabled") is not True:
+                        raise ValueError("Enable local AI explicitly before requesting an explanation")
+                    _, report = active.store.latest(active.adapter.target)
+                    if not report or not body.get("incident") or report.get("incident_id") != body["incident"]:
+                        raise ValueError("Run fresh checks for this target before asking AI")
+                    result = ai.explain(report, body.get("model", ai.DEFAULT_MODEL))
+                elif self.path == "/api/scan":
                     result = active.scan(deep=True) if body.get("deep") else active.scan()
                 elif self.path == "/api/validate":
                     result = active.validate_connection()
