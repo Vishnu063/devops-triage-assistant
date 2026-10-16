@@ -1,0 +1,25 @@
+name: Report a problem
+description: Help reproduce a setup, documentation, or runtime problem.
+title: "[Bug]: "
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, relevant tool versions, and commit or version. Remove credentials and private hostnames.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact command or screen and a minimal reproduction.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result
+      description: Include redacted error output or a screenshot when useful. Never attach live credentials or confidential reports.
+    validations:
+      required: true

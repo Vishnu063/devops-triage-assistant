@@ -4,6 +4,8 @@ Understand live evidence, investigate likely causes, and review a specific repai
 
 **v0.3: Linux plus 60 tool profiles, connection setup and incident recovery workflows.** Automated coverage includes profiles, approval controls, health policies, previews, rollback and incident history. Most provider responses and resource mutations use fixtures. Docker also has three passing real acceptance cases in a disposable GitHub CI lab; production and other-tool acceptance remain pending. See [test results and limits](docs/TEST_RESULTS.md) and the [disposable Docker lab](docs/DOCKER_LAB.md).
 
+**New here? [Follow the first-run guide](docs/FIRST_RUN.md)** to check installation, configure one connection, and understand the first diagnosis.
+
 ## What you can do
 
 - Select Linux or one of 60 cloud, container, CI/CD, infrastructure, monitoring, security, access, networking and database profiles.

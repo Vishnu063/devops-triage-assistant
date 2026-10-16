@@ -1,0 +1,17 @@
+name: Suggest an improvement
+description: Describe a practical problem and how an improvement would help.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What were you trying to do?
+      description: Explain the task and where you got stuck.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested improvement
+      description: Describe the expected behavior and how we could check it works.
+    validations:
+      required: true
