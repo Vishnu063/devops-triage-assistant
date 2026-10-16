@@ -109,7 +109,7 @@ def explain(report, model=DEFAULT_MODEL, question=None):
         content = message.get('content') if isinstance(message, dict) else None
         if response.get('done') is not True or not isinstance(content, str) or not content.strip() or len(content) > 12000:
             raise ValueError('Incomplete or invalid model response')
-        return dict(result, status='ok', explanation=content.strip())
+        return dict(result, status='ok', explanation=content.strip(),metrics={key:response[key] for key in ('total_duration','load_duration','prompt_eval_count','eval_count','eval_duration') if type(response.get(key)) is int})
     except (OSError, ValueError, http.client.HTTPException):
         return dict(result, status='unavailable', message='Local AI is unavailable, timed out or returned an invalid response. Check Ollama and the installed model. Normal diagnosis remains available.')
     finally:
