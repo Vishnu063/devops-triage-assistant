@@ -97,10 +97,11 @@ class AITests(unittest.TestCase):
 
     def test_known_health_and_disk_overclaims_are_withheld(self):
         sample=report()
-        with patch.object(ai,'_local_models',return_value=[ai.DEFAULT_MODEL]),patch.object(ai,'_request',return_value={'done':True,'message':{'content':'The application is healthy. Disk usage is within acceptable limits.'}}):
+        with patch.object(ai,'_local_models',return_value=[ai.DEFAULT_MODEL]),patch.object(ai,'_request',return_value={'done':True,'eval_count':7,'message':{'content':'The application is healthy. Disk usage is within acceptable limits.'}}):
             response=ai.explain(sample)
         self.assertEqual(response['status'],'unreliable')
         self.assertNotIn('explanation',response)
+        self.assertEqual(response['metrics']['eval_count'],7)
         self.assertIn('unsupported_application_health_claim',response['validation_flags'])
         self.assertIn('disk_pressure_downplayed',response['validation_flags'])
 
