@@ -2,7 +2,7 @@
 
 Start with examples/connections.example.json. Keep only tools you intend to use, replace their null fields, and save the result as connections.json in the repository root (ignored by Git). Profile IDs and scopes are listed in INTEGRATIONS.md. This file is operator configuration, not an automatic discovery mechanism.
 
-Use only supported fields from the template plus base_url, headers and basic_auth where needed. Literal password/token fields are rejected. Absolute paths are recommended for project directories, inventories, rule files and private credential files.
+Use supported template fields plus application_health; API profiles also accept base_url, headers and basic_auth where needed. See RECOVERY_WORKFLOW.md for the connection wizard and health policy. Literal password/token fields are rejected. Absolute paths are recommended for project directories, inventories, rule files and private credential files.
 
 ## API authentication
 

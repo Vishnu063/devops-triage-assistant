@@ -95,7 +95,7 @@ def adapter_for(tool):
 
 def fixture_collect(adapter, raw=None):
     data = FIXTURES[adapter.tool][0] if raw is None else raw
-    with patch.object(adapter, 'command', return_value=(data,0)), patch.object(adapter, 'request', return_value=(data,200)):
+    with patch.dict(os.environ, {'TRIAGE_MONGODB_URI':'mongodb://127.0.0.1:27017'}), patch.object(adapter, 'command', return_value=(data,0)), patch.object(adapter, 'request', return_value=(data,200)):
         return adapter.collect()
 
 

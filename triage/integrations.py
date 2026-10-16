@@ -90,7 +90,7 @@ class ToolAdapter:
             raise ValueError("Tool configuration must be an object")
         self.tool = tool
         self.profile = PROFILES[tool]
-        allowed = set(requirements(self.profile))
+        allowed = set(requirements(self.profile)) | {"application_health"}
         if self.profile["endpoint"]:
             allowed |= {"base_url", "headers", "basic_auth"}
         if set(config) - allowed:
@@ -107,6 +107,9 @@ class ToolAdapter:
         basic = config.get("basic_auth")
         if basic is not None and (not isinstance(basic, dict) or set(basic) != {"username_env", "password_env"} or any(not isinstance(v, str) or not ENV_NAME.fullmatch(v) for v in basic.values())):
             raise ValueError("basic_auth must name username_env and password_env environment variables")
+        if "application_health" in config:
+            from .health import validate_health
+            validate_health(config["application_health"])
         self.config = dict(config)
         for key in requirements(self.profile):
             value = config.get(key)
@@ -123,8 +126,6 @@ class ToolAdapter:
             raise ValueError("Salt requires one exact minion ID, not a wildcard target")
         if self.profile["endpoint"]:
             self.base_url = self.validate_base_url(config.get("base_url", ""))
-        if tool == "mongodb" and not os.environ.get("TRIAGE_MONGODB_URI"):
-            raise ValueError("Set TRIAGE_MONGODB_URI in the environment before selecting MongoDB")
         self.target = tool + ":" + fingerprint(self.config)[:20]
         self.services = ()
 
@@ -212,7 +213,7 @@ class ToolAdapter:
             return "HTTP 429: rate limited. Check provider quotas and wait before an operator-triggered retry."
         return f"HTTP {code}: service request failed. Inspect provider/service status and API compatibility."
 
-    def command(self, recipe, *, repair=False):
+    def command(self, recipe, *, repair=False, include_stderr=False):
         argv = [self.render(item) for item in recipe]
         cwd = self.render(self.profile["cwd"]) if self.profile["cwd"] else None
         env = dict(os.environ, AWS_PAGER="", PAGER="cat", GIT_TERMINAL_PROMPT="0", CI="true")
@@ -239,7 +240,7 @@ class ToolAdapter:
                         streams.unregister(key.fileobj)
                         continue
                     output[key.data].extend(chunk)
-                    if len(output[key.data]) > LIMIT:
+                    if sum(len(value) for value in output.values()) > LIMIT:
                         raise RuntimeError("CLI output exceeded 1 MiB; narrow the configured scope")
             remaining = max(0.01, deadline - time.monotonic())
             try:
@@ -261,7 +262,7 @@ class ToolAdapter:
             if any(x in error for x in ("unauthorized", "forbidden", "accessdenied", "authentication", "permission denied")):
                 raise RuntimeError("Native CLI authentication/permission failed. Check the explicit account/context and credential scope.")
             raise RuntimeError(f"Native CLI returned exit code {returncode}. Review local CLI diagnostics; stderr is withheld to protect secrets.")
-        return output["stdout"].decode("utf-8"), returncode
+        return (output["stdout"] + (output["stderr"] if include_stderr else bytearray())).decode("utf-8"), returncode
 
     def parse(self, raw):
         kind = self.profile["parser"]
@@ -275,6 +276,11 @@ class ToolAdapter:
             if kind == "jsonlines" and isinstance(obj, dict):
                 obj = [obj]
             projected = {key: select(obj, path) for key, path in self.profile["fields"].items()}
+            if self.tool == "kubernetes" and isinstance(obj, dict):
+                revision = obj.get("metadata", {}).get("annotations", {}).get("deployment.kubernetes.io/revision")
+                projected["revision"] = [revision] if revision is not None else []
+                template = obj.get("spec", {}).get("template")
+                projected["template_hash"] = [fingerprint(template)] if template is not None else []
             if self.tool == "gitleaks":
                 if not isinstance(obj, list):
                     raise ValueError("Expected a Gitleaks finding array")
@@ -348,6 +354,8 @@ class ToolAdapter:
 
     def collect(self):
         profile = self.profile
+        if self.tool == "mongodb" and not os.environ.get("TRIAGE_MONGODB_URI"):
+            raise RuntimeError("Set TRIAGE_MONGODB_URI in the environment before checking MongoDB")
         if profile["command"]:
             raw, code = self.command(profile["command"])
         else:
@@ -377,10 +385,12 @@ class ToolAdapter:
         missing = [key for key in essential if not observations.get(key) or all(v is None for v in observations[key])]
         truncated = any(len(v) > 200 for v in observations.values())
         observations = {k: v[:200] for k, v in observations.items()}
-        return {"tool": self.tool, "collected_at": time.time(), "observations": redact(observations),
+        snapshot = {"tool": self.tool, "collected_at": time.time(), "observations": redact(observations),
                 "transport_code": code, "truncated": truncated,
                 "errors": (["Expected evidence missing: " + ", ".join(missing)] if missing else []) + (["Evidence truncated; scope is too broad"] if truncated else []),
                 "empty": not any(observations.values()), "missing_evidence": missing}
+        self.last_snapshot = snapshot
+        return snapshot
 
     def findings(self, snapshot):
         obs = snapshot["observations"]

@@ -1,6 +1,6 @@
 # Integration coverage
 
-All profiles below have collector and diagnosis code with automated synthetic-response coverage. **Live provider acceptance is still pending for all 60.** The full suite passes 132 tests locally; these tests do not establish compatibility with your deployed tool versions, credentials or environments. See TEST_RESULTS.md. Supported scope is deliberately narrow; this does not mean every error or service of a platform is covered.
+All profiles below have collector and diagnosis code with automated synthetic-response coverage. **Live provider acceptance is still pending for all 60.** The full suite passes 175 tests locally; these tests do not establish compatibility with your deployed tool versions, credentials or environments. See TEST_RESULTS.md. Supported scope is deliberately narrow; this does not mean every error or service of a platform is covered.
 
 Read-only means no intended resource mutation. Native CLIs may update local credential caches, scan databases, or use trusted provider/inventory plugins. Configure only trusted local projects and read-only credentials for diagnosis.
 
@@ -69,11 +69,11 @@ Read-only means no intended resource mutation. Native CLIs may update local cred
 
 ## Executable repair boundary
 
-Only Docker/Podman container restart, Kubernetes Deployment rollout restart, GitHub Actions failed-job rerun, and GitLab failed-pipeline retry are implemented as mutations. Other profiles diagnose and provide tool-specific investigation steps. Linux retains its allowlisted failed-systemd-service restart.
+Only Docker/Podman container restart, Kubernetes Deployment rollout restart, GitHub Actions failed-job rerun, and GitLab failed-pipeline retry are implemented as mutations. Other profiles diagnose and provide tool-specific investigation steps. Linux retains its allowlisted failed-systemd-service restart. A failed Kubernetes recovery can now offer a separately approved rollback to its captured revision; see RECOVERY_WORKFLOW.md.
 
-Every implemented action requires a reviewed plan, explicit approval, a matching fresh evidence fingerprint, a matching connection configuration, and unexpired single-use approval. Rerunning a pipeline can trigger deployment jobs; the plan calls out this risk. No repair has automatic rollback.
+Every implemented action requires a reviewed plan, explicit approval, a matching fresh evidence fingerprint, a matching connection configuration, and unexpired single-use approval. Rerunning a pipeline can trigger deployment jobs; the plan calls out this risk. No repair has automatic rollback. The captured-revision rollback path is a separate expiring plan that requires a second approval.
 
-Kubernetes probes for up to six samples separated by two seconds. A rollout can take longer, in which case needs_attention requires manual inspection rather than another automatic restart. Container verification observes running state, not sustained application health. CI rerun verification checks scheduling, not successful pipeline completion.
+Kubernetes probes for up to six samples separated by two seconds. A rollout can take longer, in which case needs_attention requires manual inspection rather than another automatic restart. Container state verification observes running state. Optional application health policies add consecutive endpoint/status or JSON-condition probes; they still do not establish sustained business behavior. CI rerun verification checks scheduling, not successful pipeline completion.
 
 ## API compatibility and trust
 

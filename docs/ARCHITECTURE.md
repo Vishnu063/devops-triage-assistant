@@ -39,3 +39,13 @@ ToolEngine reuses the SQLite approval/history lifecycle and adds tool/configurat
 CLI and browser use the same factory. A browser tool selector chooses an already configured profile; it cannot supply connection endpoints, tokens, arbitrary commands or target credentials. Configuration changes require a server restart. Header credentials are resolved from the environment and excluded from persisted plans. Existing local account isolation and loopback-only deployment boundaries still apply.
 
 The expansion now has synthetic-response coverage for all 60 profiles, transport checks and approval-controlled repair lifecycle tests. The local suite passes 132 tests. No production readiness, live provider acceptance or full platform coverage is implied; see TEST_RESULTS.md for precise evidence and remaining gaps.
+
+## Incident experience (v0.3)
+
+ExperienceEngine wraps the shared approval engine with policy-bound previews, read validation, optional application health, incident evidence and local alerts. ConnectionWizard validates and atomically saves private configuration. Browser configuration updates flow through the same adapter validators as CLI execution; no arbitrary command input is introduced.
+
+IncidentStore records projected scans and scan-to-scan differences, safe deep-evidence summaries, plans, approvals and outcomes. Cause confidence is explanatory rather than a fabricated percentage. Selected-source correlation is explicitly not topology discovery or proof of causation.
+
+Kubernetes rollback is a separate plan and approval path tied to a failed parent recovery, captured UID/revision/template hash, exact current evidence and expiring single-use approval. A health failure can downgrade an otherwise successful state repair to needs_attention. No rollback is automatic.
+
+The health transport uses its own credential bindings, validates TLS, blocks redirects and retains status/assertion outcomes rather than response bodies. Alerts are an on-demand local inbox; there is no external message delivery or unattended monitor. See RECOVERY_WORKFLOW.md and TEST_RESULTS.md.

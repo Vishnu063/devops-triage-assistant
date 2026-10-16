@@ -2,7 +2,7 @@
 
 Understand live evidence, investigate likely causes, and review a specific repair before approving it.
 
-**v0.2: Linux plus 60 tool profiles with automated fixture coverage.** The current suite passes 132 tests, including all profiles, approval controls, local transports and repair workflows. Provider responses and resource mutations are simulated; live provider acceptance remains pending. See [test results and limits](docs/TEST_RESULTS.md).
+**v0.3: Linux plus 60 tool profiles, connection setup and incident recovery workflows.** Automated coverage includes profiles, approval controls, health policies, previews, rollback and incident history. Provider responses and resource mutations are simulated; live provider acceptance remains pending. See [test results and limits](docs/TEST_RESULTS.md).
 
 ## What you can do
 
@@ -69,9 +69,24 @@ devops-triage --config connections.json --tool docker diagnose
 devops-triage --config connections.json web
 ```
 
-The dashboard lists all tools, connection requirements, exact collector scopes and available executable actions. The selected integration uses the startup configuration. Targets, endpoints, arbitrary commands and credentials cannot be entered through the browser.
+The dashboard lists all tools, connection requirements, exact collector scopes and executable actions. Its connection wizard saves validated settings privately and applies them immediately. Credentials are environment-variable references; no arbitrary command field is exposed.
 
 See [connection examples](docs/CONNECTIONS.md) for API authentication, cloud profiles, databases and scanner behavior.
+
+## Connection and incident workflow
+
+Use the connection wizard and explicit read validation, request deeper evidence where supported, review confidence and a fix preview, and inspect the incident timeline and local alert inbox. Optional application probes require consecutive successes. Kubernetes rollback always needs a second approval.
+
+```bash
+devops-triage --tool docker setup
+devops-triage --tool docker validate
+devops-triage --tool docker diagnose --deep
+devops-triage correlate linux docker kubernetes --deep
+devops-triage timeline
+devops-triage alerts
+```
+
+See [the full workflow and exact feature boundaries](docs/RECOVERY_WORKFLOW.md). Live validation needs configured authorized systems; no external provider acceptance is implied by automated tests.
 
 ## Approved repairs
 
@@ -86,7 +101,7 @@ Executable actions currently include:
 | GitHub Actions | Rerun failed jobs of one failed/timed-out run |
 | GitLab CI/CD | Retry failed jobs in one failed pipeline |
 
-**The other profiles provide diagnosis and runbooks; they do not execute fixes yet.** Pipeline retries may execute deployment jobs and incur costs. Container/deployment restarts can interrupt service and repeat the original failure. No action has automatic rollback.
+**The other profiles provide diagnosis and runbooks; they do not execute fixes yet.** Kubernetes can also propose a separately approved rollback to a captured revision after failed recovery; see the recovery workflow. Pipeline retries may execute deployment jobs and incur costs. Container/deployment restarts can interrupt service and repeat the original failure. No action has automatic rollback.
 
 ```bash
 devops-triage --config connections.json --tool docker plan restart
@@ -108,7 +123,7 @@ After a page reload, use repair history and **Review stored plan** to recover a 
 
 ## What verification means
 
-`verified` means only the configured immediate state probe passed. Container running state is not application health. Kubernetes replica readiness is not sustained endpoint availability. CI retry verification establishes scheduling, not a successful deployment. If a rollout is still progressing after the observation window, the result is `needs_attention`.
+`verified` requires the configured state probe and, when supplied, the application health policy. Without an application endpoint, the result explicitly covers state only. A container running state is not full application health, and CI retry verification establishes scheduling rather than successful completion. If a rollout is still progressing after the observation window, the result is `needs_attention`.
 
 External changes can occur between state inspection and command execution. Use a single incident owner and your normal change controls. This is not an exactly-once distributed transaction system or a production-certified control plane.
 
@@ -125,6 +140,6 @@ External changes can occur between state inspection and command execution. Use a
 
 ## Build and development status
 
-CI builds a wheel and runs the 132-test suite on Python 3.11, 3.12 and 3.13 for normal pushes/PRs. The suite includes 60 individually named synthetic-response profile tests, tool repair/approval tests, bounded native-process transport tests and real loopback HTTP tests. A manual run can enable `run_tests`. The earlier `[skip tests]` marker is absent from this verification update.
+CI builds a wheel and runs the automated suite on Python 3.11, 3.12 and 3.13 for normal pushes/PRs. The suite includes 60 individually named synthetic-response profile tests, tool repair/approval tests, bounded native-process transport tests and real loopback HTTP tests. A manual run can enable `run_tests`. The earlier `[skip tests]` marker is absent from this verification update.
 
 See [integration coverage](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md), [contributing](CONTRIBUTING.md), and [security reporting](SECURITY.md).

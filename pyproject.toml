@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "devops-triage-assistant"
-version = "0.2.0"
+version = "0.3.0"
 description = "Evidence-based live DevOps diagnosis with explicitly approved repairs"
 requires-python = ">=3.11"
 dependencies = []

@@ -1,45 +1,41 @@
-# Test results — 2026-10-16
+# Test results — v0.3, 2026-10-16
 
-## Local result
-
-**132 tests passed** on Linux with Python 3.12.14.
+**175 tests passed locally** on Linux with Python 3.12.14. The final full run completed successfully after the feature implementation and fixes.
 
 Command: `python -m unittest discover -s tests -v`
 
-The first run of the expanded suite exposed failures. The final full run passed after the fixes below; this report describes the final source, not the earlier unverified expansion.
+## Coverage
 
-## Coverage and evidence
-
-| Area | What was exercised | Boundary |
+| Area | Evidence | Boundary |
 | --- | --- | --- |
-| 60 tool profiles | One individually named test per profile, handwritten representative responses, selected-field projection, required evidence and findings | Native commands and provider API responses are mocked; this does not validate live provider schemas or installed CLI versions |
-| Sensitive data | Fixtures containing secret-like fields, source snippets, manifests and provider outputs | Projection excludes those fixture values; this is not proof that every possible secret string is detected |
-| Five tool repair actions | Preconditions, review, approval, dispatch, expected post-action state and replay rejection | Mutations are simulated; no real container, Deployment or CI pipeline is changed |
-| Approval boundaries | Missing approval, expiry, changed evidence/command, cancellation, duplicate planning and concurrent execution | Local process/database behavior; not a distributed transaction guarantee |
-| HTTP transport | Actual loopback fixture server, header binding, JSON projection, redirect rejection, permission errors and response size limits | Controlled service, not external provider/TLS acceptance |
-| Native process transport | Actual Python subprocesses, successful streaming, withheld stderr and output size limits | Does not establish the syntax or behavior of third-party CLIs |
-| Web API | Loopback requests, session token, host/origin rejection, tool selection, catalog, stored plans and full simulated approval flow | HTTP/API checks; rendered browser interactions and accessibility were not inspected |
-| Linux | Actual local read-only collection plus simulated systemd states and repairs | No real failed systemd unit was restarted; remote SSH acceptance remains pending |
+| 60 tool profiles | Individually named tests with handwritten representative responses, metadata projection, findings and missing-evidence checks | Provider responses/native CLI results are simulated; not live compatibility acceptance |
+| Existing repairs | Five tool repair lifecycles plus Linux approval, expiry, state/target changes, cancellation, replay and concurrency checks | Resource mutations are simulated |
+| Connection wizard | Required-field schema, private atomic save, preservation of other entries, runtime update, invalid credentials/configuration rejection and creation of a new configuration through the CLI | No credential acquisition or third-party CLI installation |
+| Permission validation | Read collector validation and non-mutating Kubernetes authorization review behavior | Real external permission scopes remain unverified |
+| Application health | Actual disposable HTTP endpoint, consecutive success, intermittent failure, JSON assertions, redirect rejection, bounded policy settings and missing-credential behavior | Local HTTP fixtures, not remote private-CA/provider acceptance |
+| Preview and policy | Exact operation/before-state preview, explicit dry-run limitation and changed health policy rejection | A preview is not a simulation of provider effects |
+| Rollback | Captured Kubernetes revision/template, separate approval, exact undo command, state/template verification, replay rejection, missing history and evidence drift | Simulated Deployment; no real cluster was changed |
+| Evidence and confidence | Signature-only log extraction, unsupported-deep-collector reporting, differences between samples and cautious multi-source hypotheses | No proof of topology or causation from correlation alone |
+| Timeline and alerts | Persistent evidence records, local deduplication, acknowledgement and authenticated HTTP endpoints | Local/on-demand alerts, not email/Slack delivery or unattended monitoring |
+| Privacy and transports | Projection exclusions, malformed credential validation, actual bounded Python subprocesses, stderr handling, actual loopback requests, redirects and response limits | Not an exhaustive security audit |
+| Dashboard API | Session/host/origin controls, tool selection, wizard save/validate, timeline, alerts, correlation and existing approval flows | Rendered browser behavior and accessibility were not visually inspected |
+| Linux | Actual local read-only measurements and simulated systemd failures | Remote SSH and real failed-unit restarts remain pending |
 
-## Package and interface checks
+## Installed-package checks
 
-- Built a 0.2.0 wheel successfully and installed the package in an isolated virtual environment.
-- Ran the installed CLI outside the repository and listed all 60 profiles.
-- Used the installed CLI to collect real local Linux measurements.
-- Started the installed dashboard on a temporary loopback port and checked its HTML asset, generated session token, 60-profile catalog, live Linux scan API and rejection of a foreign Origin.
-- Checked dashboard JavaScript syntax with `node --check`.
-- Built the final wheel again after the fixes.
+- Built and installed the 0.3.0 wheel in an isolated virtual environment.
+- Started the installed dashboard outside the repository with a new private configuration file.
+- Exercised the real HTTP connection wizard, private file save, immediate 60-profile catalog update, live local Linux scan, configured disposable application health endpoint, incident timeline, local alert API and selected-source correlation.
+- Confirmed new configuration file permissions are 0600.
+- Checked dashboard JavaScript syntax with Node.
+- Real resource mutations were not performed.
 
-## Defects fixed
+## Previously fixed regression cases remain covered
 
-1. Kafka's parser could read the next field name as a nonempty ISR when the ISR list was empty. Numeric-field parsing now preserves empty lists and flags under-replication.
-2. Semgrep reports containing scan errors but no matches could produce no findings. Such reports now explicitly indicate incomplete static analysis.
-3. Invalid credential environment bindings could raise TypeError instead of an actionable validation error. They now fail validation.
-4. Header binding objects could carry ignored literal credential fields. Unsupported nested fields are now rejected before a plan can be created.
-5. Native-CLI profiles could accept unused API authentication configuration. These unrelated fields are now rejected rather than persisted in a plan.
+The suite retains checks for Kafka empty-ISR parsing, Semgrep scan errors, malformed environment bindings, literal credential fields hidden in header objects and unused native-profile authentication settings. The original Linux/approval and 60-profile tests remain in the suite.
 
 ## Remaining acceptance work
 
-No credentials or live target configuration were supplied for the external providers. Consequently, this run does not certify live integration behavior for any of the 60 products. Real resource recovery, provider-specific permission scopes, deployed-version compatibility, TLS/private-CA setups, remote SSH, sustained application health, and rendered browser behavior remain unverified.
+No authorized live external provider connections were supplied. Therefore, live behavior for the 60 products, deployed CLI/API versions, private CA/TLS environments, actual recovery/rollback, sustained application behavior, remote SSH and rendered browser QA remain unverified. Use the new connection wizard and explicit Validate connection action with disposable authorized targets.
 
-GitHub Actions runs the same suite on Python 3.11, 3.12 and 3.13 and builds a downloadable wheel. Check the Actions result for the verification commit; a package-only build from an earlier skip-tests commit is not test evidence.
+GitHub Actions builds the wheel and runs the suite on Python 3.11, 3.12 and 3.13. Check the Actions result for this verification commit; a previous package-only build does not establish test success.

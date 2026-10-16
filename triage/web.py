@@ -4,9 +4,10 @@ import json
 from pathlib import Path
 import secrets
 from .integrations import catalog
+from .evidence import correlate
 
 
-def make_handler(engine, token, port, factory=None, configurations=None):
+def make_handler(engine, token, port, factory=None, configurations=None, wizard=None):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
     allowed_origins = {f"http://{host}" for host in allowed_hosts}
 
@@ -46,7 +47,7 @@ def make_handler(engine, token, port, factory=None, configurations=None):
                 return self.respond(403, {"error": "Invalid session token or origin"})
             try:
                 size = int(self.headers.get("Content-Length", "0"))
-                if size < 2 or size > 4096 or self.headers.get("Transfer-Encoding"):
+                if size < 2 or size > 32768 or self.headers.get("Transfer-Encoding"):
                     return self.respond(400, {"error": "Invalid body size"})
                 body = json.loads(self.rfile.read(size))
                 if not isinstance(body, dict):
@@ -56,9 +57,34 @@ def make_handler(engine, token, port, factory=None, configurations=None):
                 selected = body.get("tool", getattr(engine.adapter, "tool", "linux"))
                 if not isinstance(selected, str):
                     raise ValueError("Tool ID must be a string")
+                if self.path in ("/api/connection/schema", "/api/connection/save"):
+                    if wizard is None:raise ValueError("Connection wizard is unavailable")
+                    if self.path.endswith("schema"):
+                        return self.respond(200,wizard.schema(selected))
+                    if not isinstance(body.get("config"),dict):raise ValueError("Connection config must be an object")
+                    return self.respond(200,wizard.save(selected,body["config"]))
                 active = factory(selected) if factory else engine
                 if self.path == "/api/scan":
-                    result = active.scan()
+                    result = active.scan(deep=True) if body.get("deep") else active.scan()
+                elif self.path == "/api/validate":
+                    result = active.validate_connection()
+                elif self.path == "/api/timeline":
+                    incident=body.get("incident")
+                    if incident is not None and not isinstance(incident,str):raise ValueError("Incident ID must be a string")
+                    result = active.store.timeline(incident)
+                elif self.path == "/api/alerts":
+                    ack=body.get("acknowledge")
+                    if ack is not None and not isinstance(ack,str):raise ValueError("Alert ID must be a string")
+                    result = active.store.alerts(ack)
+                elif self.path == "/api/correlate":
+                    selected_tools=body.get("tools")
+                    if not isinstance(selected_tools,list) or not 1<=len(selected_tools)<=4 or any(not isinstance(tool,str) for tool in selected_tools) or len(set(selected_tools))!=len(selected_tools):
+                        raise ValueError("Choose one to four distinct configured tools")
+                    if not factory:raise ValueError("Correlation requires a configured engine factory")
+                    result=correlate([factory(tool).scan(deep=bool(body.get("deep"))) for tool in selected_tools],active.store)
+                elif self.path == "/api/rollback":
+                    if not isinstance(body.get("id"),str):raise ValueError("Parent plan ID is required")
+                    result=active.rollback_plan(body["id"])
                 elif self.path == "/api/history":
                     result = active.history()
                 elif self.path == "/api/plan":
@@ -82,11 +108,11 @@ def make_handler(engine, token, port, factory=None, configurations=None):
     return Handler
 
 
-def serve(engine, port, factory=None, configurations=None):
+def serve(engine, port, factory=None, configurations=None, wizard=None):
     if not 1 <= port <= 65535:
         raise ValueError("Port must be between 1 and 65535")
     token = secrets.token_hex(32)
-    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(engine, token, port, factory, configurations))
+    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(engine, token, port, factory, configurations, wizard))
     server.daemon_threads = True
     print(f"Dashboard: http://127.0.0.1:{port} — default target: {engine.adapter.target}")
     try:

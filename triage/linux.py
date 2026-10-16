@@ -61,7 +61,8 @@ class Linux:
 
     def collect(self):
         script = COLLECTOR.replace("SERVICES", repr(self.services), 1)
-        return json.loads(self.command([sys.executable if self.target == "local" else "python3", "-"], script))
+        self.last_snapshot = json.loads(self.command([sys.executable if self.target == "local" else "python3", "-"], script))
+        return self.last_snapshot
 
     def restart(self, service):
         if service not in self.services or not SERVICE.fullmatch(service):
