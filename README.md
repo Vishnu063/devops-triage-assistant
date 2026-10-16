@@ -15,20 +15,42 @@ Understand live evidence, investigate likely causes, and review a specific repai
 
 **Profile coverage is specific, not universal.** AWS currently checks one EC2 instance, CDK checks a deployed CloudFormation stack, Kustomize checks local rendering, and Ansible inspects inventory. See the [full coverage table](docs/INTEGRATIONS.md) for every tool's exact scope and required configuration.
 
-## Install
+## Easy installation
 
-Client: Linux, Python 3.11+, and the native CLI for each selected CLI-based profile. API-based profiles need no extra Python packages. Authentication uses your existing credential stores or environment variables; the assistant does not configure cloud accounts or install third-party tools.
+**Requires Linux (or Ubuntu in WSL), Git, and Python 3.11+.** Run these three commands:
 
 ```bash
 git clone https://github.com/Vishnu063/devops-triage-assistant.git
 cd devops-triage-assistant
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install .
-devops-triage tools
+bash start.sh
 ```
 
-No live connection is attempted by `tools`. Configuration templates and tool metadata do not establish connection health.
+The launcher creates a local Python environment, installs the assistant, and starts the dashboard. No manual activation or system-wide pip installation is needed. The first run needs internet access; later starts reuse the installation.
+
+Open **http://127.0.0.1:8765** on the same computer. Select a tool, open **Connection wizard**, save its settings, and click **Validate connection**. Linux checks are available immediately; other tools need their native CLI or API credentials. The launcher installs only the assistant.
+
+**Next time:** run `bash start.sh` from this folder. Press **Ctrl+C** to stop. CLI commands work through the same launcher:
+
+```bash
+bash start.sh diagnose
+bash start.sh tools
+bash start.sh --tool docker setup
+bash start.sh --tool docker validate
+```
+
+To use the `devops-triage` commands shown below directly, activate the environment with `source .venv/bin/activate`. This is optional when using `bash start.sh`.
+
+### Installation help
+
+| Problem | What to do |
+| --- | --- |
+| Python is missing or older than 3.11 | Install Python 3.11+; for a specific executable, run `TRIAGE_PYTHON=python3.12 bash start.sh`. |
+| Python cannot create the environment on Ubuntu/Debian | Run `sudo apt install python3-venv` (or the venv package matching your Python version), then retry. |
+| Installation fails | Check the pip error and your internet access, then rerun `bash start.sh`. |
+| Port 8765 is busy | Run `bash start.sh web --port 8766`, then open `http://127.0.0.1:8766`. |
+| Running on a remote server | On your computer, run `ssh -L 8765:127.0.0.1:8765 user@server`, then open the local dashboard URL. |
+
+No live connection is attempted by `tools`. Configuration templates and tool metadata do not establish connection health. Authentication uses your existing credential stores or environment variables.
 
 ## Start with Linux
 
@@ -47,7 +69,7 @@ Remote Linux requires Python 3 and systemd for service inspection. SSH uses exis
 
 ## Configure the other tools
 
-Copy `examples/connections.example.json` to an ignored `connections.json`, fill in the selected tool's fields, and remove entries you do not need. The template contains all 60 profiles with null values so it cannot silently target an example account.
+Use the dashboard's **Connection wizard** to configure one tool at a time. It saves a private `connections.json` for you. For manual setup, copy `examples/connections.example.json` to `connections.json`, fill in your tool's fields, and remove unused entries. The template uses null values so it cannot silently target an example account.
 
 For example, a Docker and Kubernetes configuration can contain:
 
