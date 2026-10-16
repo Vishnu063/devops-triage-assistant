@@ -76,3 +76,13 @@ class Profiles:
         self.name(name)
         tools=self.tools(name);self.current=name
         return tools
+
+
+class ScopedAdapter:
+    """Namespace approval identity without changing the native transport target."""
+    def __init__(self,adapter,profile):
+        from .engine import fingerprint
+        self._adapter=adapter
+        self.target=adapter.target+':profile:'+fingerprint(profile)[:12]
+    def __getattr__(self,name):
+        return getattr(self._adapter,name)
