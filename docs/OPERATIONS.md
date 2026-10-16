@@ -55,6 +55,8 @@ bash start.sh --profile team-staging --tool docker setup
 bash start.sh --profile team-staging --tool docker diagnose
 ```
 
+**Linux launch options:** `--target`, `--service` and `--health-url` are shared launch options, not saved per-environment tool settings. Switching a profile does not change the Linux host; relaunch with the appropriate target to change it. The approval namespace is separate from the native transport address.
+
 The default profile preserves the existing top-level `tools` document. Named profiles live under `profiles.NAME = {"environment":"staging","tools":{...}}` in the same private, atomically written configuration file. CLI `--profile` chooses a saved profile; dashboard selection lasts for that server session. A later launch defaults to `default` unless `--profile` is supplied. Selected connection settings are shared by clients of the same local server, which is designed for one operator.
 
 Named profiles add a namespace to target identity, so even identical tool settings cannot transfer an approval between profiles. The dashboard blocks profile changes while a nonexpired plan is pending/approved or any plan is executing. Existing exact-target, fresh-state and single-use approval checks still apply.
