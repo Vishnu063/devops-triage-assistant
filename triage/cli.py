@@ -10,7 +10,7 @@ from .experience import ExperienceEngine
 from .connections import ConnectionWizard
 from .evidence import correlate
 from .health import check_health
-from .profiles import Profiles
+from .profiles import Profiles, ScopedAdapter
 from .operations import setup_status, compare, escalation, ci_exit_code
 
 
@@ -64,8 +64,7 @@ def make_engine(args,configurations,tool=None):
         if selected not in configurations:raise ValueError(f'No configuration for {selected}; run --tool {selected} setup or doctor')
         config=configurations[selected];adapter=ToolAdapter(selected,config);core_type=ToolEngine;health=override or config.get('application_health')
     if context and context['profile']!='default':
-        from .engine import fingerprint
-        adapter.target+=':profile:'+fingerprint(context['profile'])[:12]
+        adapter=ScopedAdapter(adapter,context['profile'])
     return ExperienceEngine(core_type(adapter,args.state_dir),health,context)
 
 
@@ -91,7 +90,7 @@ def main():
             else:result=profiles.listing()
             print(json.dumps(result,indent=2));return
         if args.action=='doctor':
-            print(json.dumps(setup_status(args.tool,configurations.get(args.tool)),indent=2));return
+            print(json.dumps(setup_status(args.tool,configurations.get(args.tool),linux_target=args.target),indent=2));return
         if args.action=='tools':print(json.dumps(catalog(configurations),indent=2));return
         if args.action=='setup':
             schema=wizard.schema(args.tool);print(schema['name']+': '+schema['scope'])
