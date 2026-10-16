@@ -85,8 +85,13 @@ def evidence_summary(report):
             'scope': 'Filtered sample only. No raw logs, configuration, identity, topology or change history.'}
 
 
-def explain(report, model=DEFAULT_MODEL):
+def explain(report, model=DEFAULT_MODEL, question=None):
     model = model_name(model)
+    # The caller supplies a canonical topic, never the user's raw chat input.
+    allowed = {'What happened?', 'What is the likely cause?', 'What should I check next?',
+               'What changed?', 'Can I safely repair this?', 'Is the application healthy?'}
+    if question is not None and question not in allowed:
+        raise ValueError('Choose a supported guided question')
     result = {'provider': 'ollama', 'model': model, 'advisory_only': True,
               'incident_id': report.get('incident_id'),
               'notice': 'AI suggestions may be wrong. Verify against evidence; repairs still require explicit approval.'}
@@ -99,7 +104,7 @@ def explain(report, model=DEFAULT_MODEL):
             'model': model, 'stream': False, 'keep_alive': 0,
             'options': {'num_ctx': 2048, 'num_predict': 384, 'num_gpu': 0, 'temperature': 0.1},
             'messages': [{'role': 'system', 'content': SYSTEM},
-                         {'role': 'user', 'content': json.dumps(evidence_summary(report), allow_nan=False)}]})
+                         {'role': 'user', 'content': json.dumps({'evidence': evidence_summary(report), 'question': question or 'Explain the findings.'}, allow_nan=False)}]})
         message = response.get('message')
         content = message.get('content') if isinstance(message, dict) else None
         if response.get('done') is not True or not isinstance(content, str) or not content.strip() or len(content) > 12000:
