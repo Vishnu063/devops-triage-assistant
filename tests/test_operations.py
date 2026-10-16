@@ -119,6 +119,12 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(result['status'],'completed');self.assertTrue(result['cases'][0]['topic_keyword_present'])
         self.assertTrue(result['cases'][0]['review_required']);self.assertIn('not answer-quality',result['scope'])
 
+    def test_completed_benchmark_does_not_mark_rejected_answers_usable(self):
+        with patch.object(ai,'status',return_value={'available':True,'models':[ai.DEFAULT_MODEL]}),patch.object(ai,'explain',return_value={'status':'unreliable','validation_flags':['unsupported_application_health_claim']}),patch.object(ai,'_request',return_value={'models':[]}):
+            result=benchmark(cases=1)
+        self.assertEqual(result['status'],'completed');self.assertEqual(result['accepted_explanations'],0)
+        self.assertEqual(result['quality_gate'],'known_contradictions_detected')
+
 
 class OperationAPITests(unittest.TestCase):
     setUp=test_experience.FeatureAPITests.setUp
