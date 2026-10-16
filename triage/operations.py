@@ -6,10 +6,12 @@ from .integrations import requirements
 from .investigation import overview, share_summary
 
 
-def setup_status(tool,config=None,errors=None):
+def setup_status(tool,config=None,errors=None,linux_target="local"):
     if tool=='linux':
-        return {'tool':tool,'ready_for_attempt':True,'checks':[{'name':'local metrics','status':'ready'}],
-                'next_steps':['Run diagnose for local metrics. SSH and service permissions need separate validation.']}
+        remote=linux_target!='local';available=not remote or shutil.which('ssh') is not None
+        return {'tool':tool,'configured_target':linux_target,'ready_for_attempt':available,
+                'checks':[{'name':'SSH client' if remote else 'local metrics','status':'ready' if available else 'missing'}],
+                'next_steps':['Run validation to check the configured SSH target, noninteractive authentication, remote Python and any required systemd permissions.' if remote else 'Run diagnose for local metrics. Service checks require an explicit allowlist.']}
     if tool not in PROFILES:raise ValueError('Unknown tool ID')
     profile=PROFILES[tool];config=config or {};checks=[];steps=[]
     fields=requirements(profile)+(['base_url'] if profile['endpoint'] else [])
