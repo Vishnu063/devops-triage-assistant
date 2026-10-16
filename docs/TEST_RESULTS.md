@@ -1,8 +1,14 @@
 # Test results — v0.3, 2026-10-16
 
-**175 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 178 cases: those 175 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
+**188 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 191 cases: those 188 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
 
 Command: `python -m unittest discover -s tests -v`
+
+## Optional local Ollama update
+
+Local discovery after the AI integration: **191 cases, 188 passed, three opt-in Docker cases skipped**. The additional 13 tests cover filtered evidence privacy, offline fallback, model validation/cloud exclusion, malformed and oversized replies, serialized inference, a real disposable loopback Ollama-compatible endpoint, authenticated opt-in and incident matching, and CLI behavior with and without AI. No actual model was downloaded or run; model quality and real Ollama inference remain pending. The existing Docker acceptance result below predates this AI update.
+
+The updated wheel also built successfully. Dashboard JavaScript syntax and relative documentation links passed checks. See [local AI](LOCAL_AI.md) for settings and limitations.
 
 ## Real Docker acceptance
 
