@@ -52,3 +52,8 @@ The dashboard also supports six evidence-based topics without any model. After a
 ## Measure before choosing a model
 
 Run `bash start.sh ai-benchmark` after installing your model, or use **Benchmark one sample** with AI enabled. See [benchmark measurements and limits](OPERATIONS.md#real-local-model-benchmark). Keyword checks are not a quality score, and RAM measurements on a CI runner are not a requirement for every computer.
+
+
+## Measured small-model limitation
+
+Real CPU testing completed, but human review found unsupported health claims and unsafe interpretation of a 96%-used disk. Known contradiction patterns are now withheld and the original guided findings remain available. These checks cover selected overclaims only; other errors can still pass. The default remains AI off. See [measured evidence](OLLAMA_INITIAL_BENCHMARK.json) and [test results](TEST_RESULTS.md). A successful benchmark transport does not mean its answers are accepted.
