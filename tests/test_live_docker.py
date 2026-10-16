@@ -50,10 +50,12 @@ class LiveDockerTests(unittest.TestCase):
         self.env=dict(os.environ,DOCKER_HOST='',DOCKER_CONTEXT='')
         self.native(['context','create',self.context,'--docker','host=unix:///var/run/docker.sock'],context=False)
         self.addCleanup(self.cleanup_context)
+        with socket.socket() as reservation:
+            reservation.bind(('127.0.0.1',0));self.host_port=reservation.getsockname()[1]
         self.container_id=self.native(['run','--detach','--name',self.name,
             '--label','devops-triage.lab='+self.nonce,
             '--env','TRIAGE_PRIVATE_TEST_VALUE=lab-only-do-not-report',
-            '--publish','127.0.0.1::8080',IMAGE,'python','-u','-c',SERVER]).strip()
+            '--publish','127.0.0.1:'+str(self.host_port)+':8080',IMAGE,'python','-u','-c',SERVER]).strip()
         self.addCleanup(self.cleanup_container)
         address=self.native(['port',self.container_id,'8080/tcp']).strip()
         self.assertTrue(address.startswith('127.0.0.1:'))
@@ -116,7 +118,8 @@ class LiveDockerTests(unittest.TestCase):
         # Automated approval is confined to this generated, ownership-labelled lab container.
         self.engine.approve(plan['id'])
         result=self.engine.apply(plan['id'])
-        self.assertEqual(result['status'],'verified',result.get('failure_reason'))
+        self.assertEqual(self.native(['port',self.container_id,'8080/tcp']).strip(),'127.0.0.1:'+str(self.host_port))
+        self.assertEqual(result['status'],'verified',json.dumps({'failure':result.get('failure_reason'),'health':result.get('application_health')}))
         self.assertTrue(result['application_health']['healthy'])
         started=self.adapter.collect()['observations']['started']
         with self.assertRaises(ValueError):self.engine.apply(plan['id'])
