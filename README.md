@@ -56,6 +56,34 @@ To use the `devops-triage` commands shown below directly, activate the environme
 
 No live connection is attempted by `tools`. Configuration templates and tool metadata do not establish connection health. Authentication uses your existing credential stores or environment variables.
 
+## Optional free local AI (no API key)
+
+Use **Ollama with `qwen2.5:0.5b`** for short explanations of diagnostic findings. AI is off by default. The assistant still diagnoses and handles approved repairs when Ollama is absent.
+
+1. Install [Ollama](https://ollama.com/download) on the same computer as the assistant. Start its local service (`ollama serve` if it is not already running).
+2. Download the small model once:
+
+```bash
+ollama pull qwen2.5:0.5b
+```
+
+3. Start the dashboard with `bash start.sh`, run live checks, and open **Local AI explanation**. Click **Check Ollama**, enable local AI, then **Explain latest findings**. You can enter another installed local model name.
+
+For the CLI:
+
+```bash
+bash start.sh diagnose --ai
+bash start.sh --tool docker diagnose --deep --ai
+```
+
+`diagnose --ai-model MODEL --ai` selects another installed model. Connections and native tools still need their normal setup.
+
+The default model download is approximately **398 MB**; runtime RAM is higher and depends on the machine. This integration requests CPU mode, a 2,048-token context, a short response and immediate model unloading after completion. No GPU or paid AI API is required. A small model has limited DevOps reasoning ability and can give incorrect suggestions. Normal diagnosis is the best option on very low-memory machines.
+
+Only finding codes, numeric Linux metrics, log signature counts and health/collection flags are sent to `127.0.0.1:11434`. Raw logs, credentials, target names, configuration and free-text evidence are excluded. This intentionally limits how specific AI advice can be. AI output is displayed as untrusted plain text and cannot create, approve or execute repair plans. Requests are manual, serialized and bounded; failures leave the original report available. No model is downloaded automatically, and cloud-backed models are excluded. Model/API checks use automated fixtures and a real loopback HTTP test; real model inference and answer quality have **not** been acceptance-tested here.
+
+See [local AI setup and troubleshooting](docs/LOCAL_AI.md).
+
 ## Start with Linux
 
 ```bash
@@ -162,7 +190,7 @@ External changes can occur between state inspection and command execution. Use a
 - CLI/API responses are capped at 1 MiB. Displayed field values are capped at 200 per field; truncated evidence cannot authorize a repair.
 - Plans and history are local in `~/.local/state/devops-triage/`, with private directory/database permissions. Local history is not tamper-proof against the account owner or root and has no rotation policy yet.
 - Keep the dashboard on loopback. It has no shared-user authentication, RBAC or public hosting support.
-- Native CLIs and their configuration/plugins must be trusted. Scanner profiles can download vulnerability databases or contact their analysis provider. No external LLM is used.
+- Native CLIs and their configuration/plugins must be trusted. Scanner profiles can download vulnerability databases or contact their analysis provider. No external LLM is used. Optional AI explanations use only a separately installed local Ollama model.
 
 ## Build and development status
 
