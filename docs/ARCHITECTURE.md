@@ -38,4 +38,4 @@ ToolEngine reuses the SQLite approval/history lifecycle and adds tool/configurat
 
 CLI and browser use the same factory. A browser tool selector chooses an already configured profile; it cannot supply connection endpoints, tokens, arbitrary commands or target credentials. Configuration changes require a server restart. Header credentials are resolved from the environment and excluded from persisted plans. Existing local account isolation and loopback-only deployment boundaries still apply.
 
-This expansion was implemented without new test execution at the operator's request. No production readiness or full platform coverage is implied. The existing Linux test suite predates these changes; no new cross-tool acceptance evidence exists.
+The expansion now has synthetic-response coverage for all 60 profiles, transport checks and approval-controlled repair lifecycle tests. The local suite passes 132 tests. No production readiness, live provider acceptance or full platform coverage is implied; see TEST_RESULTS.md for precise evidence and remaining gaps.

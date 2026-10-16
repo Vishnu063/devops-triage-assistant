@@ -8,4 +8,4 @@ For bugs, include the tool/OS versions, sanitized observed evidence, expected be
 
 Use fake adapters for mutation tests. Add disposable lab acceptance notes before claiming live recovery support. Describe unsupported cases instead of hiding them behind a generic healthy result.
 
-For v0.2, new test and live-acceptance execution was deferred at the operator's request. Do not describe the 60 new profiles as validated. This source update uses a [skip tests] marker; future unmarked pushes retain the test job, and the suite can also be invoked explicitly through workflow_dispatch. Expand one profile at a time and record exact coverage instead of equating one check with full product support.
+The 60 profiles now have synthetic-response test coverage. Maintain tests/test_integrations.py when changing parsers, scope, credential bindings or repair behavior. Do not equate fixture coverage with live compatibility or complete product support. Add disposable acceptance evidence for a specific deployed tool version before making such a claim.

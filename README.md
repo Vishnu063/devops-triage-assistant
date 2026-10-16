@@ -2,7 +2,7 @@
 
 Understand live evidence, investigate likely causes, and review a specific repair before approving it.
 
-**v0.2: Linux plus 60 implemented tool profiles. This build is unverified.** At the operator's request, no new tests, scanner runs, live connection checks, or browser acceptance runs were performed. The previous Linux version's results do not verify these additions.
+**v0.2: Linux plus 60 tool profiles with automated fixture coverage.** The current suite passes 132 tests, including all profiles, approval controls, local transports and repair workflows. Provider responses and resource mutations are simulated; live provider acceptance remains pending. See [test results and limits](docs/TEST_RESULTS.md).
 
 ## What you can do
 
@@ -125,6 +125,6 @@ External changes can occur between state inspection and command execution. Use a
 
 ## Build and development status
 
-CI builds a wheel and makes it downloadable. This update uses the `[skip tests]` commit marker to honor the operator's request. The existing test job is preserved and runs on later unmarked pushes/PRs, or through the manual `run_tests` option; its suite predates the 60-profile expansion.
+CI builds a wheel and runs the 132-test suite on Python 3.11, 3.12 and 3.13 for normal pushes/PRs. The suite includes 60 individually named synthetic-response profile tests, tool repair/approval tests, bounded native-process transport tests and real loopback HTTP tests. A manual run can enable `run_tests`. The earlier `[skip tests]` marker is absent from this verification update.
 
 See [integration coverage](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md), [contributing](CONTRIBUTING.md), and [security reporting](SECURITY.md).

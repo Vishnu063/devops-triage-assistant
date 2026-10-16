@@ -90,11 +90,20 @@ class ToolAdapter:
             raise ValueError("Tool configuration must be an object")
         self.tool = tool
         self.profile = PROFILES[tool]
-        allowed = set(requirements(self.profile)) | {"base_url", "headers", "basic_auth"}
+        allowed = set(requirements(self.profile))
+        if self.profile["endpoint"]:
+            allowed |= {"base_url", "headers", "basic_auth"}
         if set(config) - allowed:
             raise ValueError("Unsupported configuration fields; store credentials in environment variables or native credential stores")
         if not isinstance(config.get("headers", {}), dict):
             raise ValueError("headers must be an object of environment-variable bindings")
+        for name, binding in config.get("headers", {}).items():
+            if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9-]+", name) or name.lower() in ("host", "content-length", "transfer-encoding", "connection"):
+                raise ValueError("Invalid authentication header name")
+            if not isinstance(binding, dict) or set(binding) - {"env", "prefix"} or not isinstance(binding.get("env"), str) or not ENV_NAME.fullmatch(binding["env"]):
+                raise ValueError("Header bindings accept only env and optional prefix; literal credential fields are rejected")
+            if binding.get("prefix", "") not in ("", "Bearer ", "token ", "Basic "):
+                raise ValueError("Only standard authentication prefixes are supported")
         basic = config.get("basic_auth")
         if basic is not None and (not isinstance(basic, dict) or set(basic) != {"username_env", "password_env"} or any(not isinstance(v, str) or not ENV_NAME.fullmatch(v) for v in basic.values())):
             raise ValueError("basic_auth must name username_env and password_env environment variables")
@@ -148,7 +157,7 @@ class ToolAdapter:
         for name, binding in self.config.get("headers", {}).items():
             if not re.fullmatch(r"[A-Za-z0-9-]+", name) or name.lower() in ("host", "content-length", "transfer-encoding", "connection"):
                 raise ValueError("Invalid authentication header name")
-            if not isinstance(binding, dict) or not ENV_NAME.fullmatch(binding.get("env", "")):
+            if not isinstance(binding, dict) or not isinstance(binding.get("env"), str) or not ENV_NAME.fullmatch(binding["env"]):
                 raise ValueError("Headers must reference environment variables, never literal tokens")
             secret = os.environ.get(binding["env"])
             if not secret:
@@ -330,7 +339,7 @@ class ToolAdapter:
             for line in raw.splitlines():
                 if re.search(r"\bPartition:\s*\d+", line):
                     def field(name):
-                        match = re.search(r"\b" + name + r":\s*([^\s]*)", line)
+                        match = re.search(r"\b" + name + r":[ \t]*([0-9,-]*)", line)
                         return match.group(1) if match else ""
                     replicas, isr = field("Replicas"), field("Isr")
                     rows.append((field("Partition"), int(field("Leader") or -1), len([v for v in isr.split(",") if v]) < len([v for v in replicas.split(",") if v])))
@@ -398,6 +407,8 @@ class ToolAdapter:
                 findings.append(dict(code=self.tool + ":" + item["path"], title=item["title"],
                     evidence=json.dumps({item["path"]: values}), likely_cause=item["cause"],
                     next_steps=item["steps"], service=None))
+        if any(isinstance(v, (int, float)) and v > 0 for v in obs.get("scan_error_count", [])):
+            findings.append(dict(code="scan-incomplete", title="Static analysis could not inspect all requested source", evidence=json.dumps({"error_count": obs["scan_error_count"], "error_types": obs.get("error_type", [])}), likely_cause="Parser, rule, permission or scan execution errors prevented complete analysis.", next_steps=["Review the reported scanner error types locally", "Correct the rules, language support or input access before treating the scan as complete"], service=None))
         if snapshot.get("missing_evidence"):
             findings.append(dict(code="missing-evidence", title="Expected evidence is missing", evidence=", ".join(snapshot["missing_evidence"]), likely_cause="The resource may be absent, permission-limited, or using an incompatible response schema.", next_steps=["Confirm the configured resource, API/CLI version and read permissions"], service=None))
         if snapshot["truncated"]:

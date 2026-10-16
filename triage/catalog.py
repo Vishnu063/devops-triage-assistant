@@ -13,7 +13,7 @@ def add(key, name, category, scope, *, command=None, endpoint=None, fields=None,
         command=command, endpoint=endpoint, fields=fields or {}, rules=list(rules),
         guidance=list(guidance), parser=parser, cwd=cwd, ok=list(ok), method=method,
         body=body, repair=repair, health_codes=list(health_codes), local_file=local_file,
-        maturity="implemented-unverified")
+        maturity="fixture-tested-live-unverified")
 
 
 def bad(path, values, title, cause, steps):

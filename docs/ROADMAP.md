@@ -1,11 +1,12 @@
 # Integration roadmap
 
-The 60 profiles now have implementation code. **No new test or live acceptance results are claimed.** Linux remains the previously implemented baseline.
+All 60 scoped profiles have implementation code and synthetic-response coverage. Linux remains the baseline. No production readiness or blanket platform coverage is claimed.
 
-1. Source implemented: all 60 collectors and tool-specific diagnosis/runbooks.
-2. Shared interfaces implemented: CLI and local multi-tool dashboard.
-3. Executable repairs implemented: the five actions documented in INTEGRATIONS.md, plus the existing Linux service repair.
-4. Deferred at the operator's request: new automated tests, scanner runs, live connection checks, browser QA and acceptance testing.
-5. Future depth: more provider services, richer evidence correlation, application health probes, additional individually approved repairs, and tool-specific rollback workflows.
+1. Implemented: all 60 collectors and diagnosis/runbooks.
+2. Implemented: CLI and local multi-tool dashboard.
+3. Implemented: five tool-specific executable actions plus the existing Linux service repair.
+4. Completed locally: 132 automated tests, wheel build/install, installed CLI and dashboard API smoke checks, and live local Linux collection. See TEST_RESULTS.md.
+5. Pending: live provider/native-tool acceptance against explicitly configured disposable environments, real resource recovery, and rendered browser QA.
+6. Future depth: additional provider services, evidence correlation, application health probes, more individually approved repair actions, and rollback workflows.
 
-See [exact coverage and prerequisites](INTEGRATIONS.md). A profile is not full product coverage, and source implementation is not verification.
+See INTEGRATIONS.md for each profile's exact scope and prerequisites. A single passing probe does not establish full product health.
