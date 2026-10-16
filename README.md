@@ -13,7 +13,7 @@ Investigate a failing container or deployment with evidence, guided questions an
 
 [Quick walkthrough](docs/QUICK_WALKTHROUGH.md) · [First run](docs/FIRST_RUN.md) · [Local AI](docs/LOCAL_AI.md) · [Contribute](CONTRIBUTING.md)
 
-**v0.4: deeper Kubernetes diagnosis, saved environments, incident comparison, handoffs and optional local AI.** Automated coverage includes profiles, approval controls, health policies, previews, rollback and incident history. Most provider responses and resource mutations use fixtures. Docker also has three passing real acceptance cases in a disposable GitHub CI lab; production and other-tool acceptance remain pending. See [test results and limits](docs/TEST_RESULTS.md) and the [disposable Docker lab](docs/DOCKER_LAB.md).
+**v0.4: deeper Kubernetes diagnosis, saved environments, incident comparison, handoffs and optional local AI.** Automated coverage includes profiles, approval controls, health policies, previews, rollback and incident history. Most provider responses and resource mutations use fixtures. Disposable Docker and Kubernetes lab checks passed. Real CPU-model testing also completed, but exposed small-model answer-quality problems; known overclaims are withheld and guided evidence remains the default. Production and other-provider acceptance remain pending. See [test results and limits](docs/TEST_RESULTS.md) and the [disposable Docker lab](docs/DOCKER_LAB.md).
 
 **New here? [Follow the first-run guide](docs/FIRST_RUN.md)** to check installation, configure one connection, and understand the first diagnosis.
 
@@ -103,6 +103,8 @@ bash start.sh --tool docker diagnose --deep --ai
 The default model download is approximately **398 MB**; runtime RAM is higher and depends on the machine. This integration requests CPU mode, a 2,048-token context, a short response and immediate model unloading after completion. No GPU or paid AI API is required. A small model has limited DevOps reasoning ability and can give incorrect suggestions. Normal diagnosis is the best option on very low-memory machines.
 
 Only finding codes, numeric Linux metrics, log signature counts and health/collection flags are sent to `127.0.0.1:11434`. Raw logs, credentials, target names, configuration and free-text evidence are excluded. This intentionally limits how specific AI advice can be. AI output is displayed as untrusted plain text and cannot create, approve or execute repair plans. Requests are manual, serialized and bounded; failures leave the original report available. No model is downloaded automatically, and cloud-backed models are excluded. Model/API checks use automated fixtures and a real loopback HTTP test. A separate opt-in acceptance workflow benchmarks real CPU inference on synthetic incidents; measured results and answer-review limits are recorded in [test results](docs/TEST_RESULTS.md).
+
+**Measured limitation:** the 0.5B model made unsupported health/image claims and downplayed high disk usage in real testing. Known contradiction patterns are withheld; these checks cannot catch every error. Use the guided findings as the default and review any accepted AI advice. See [measurements and review](docs/TEST_RESULTS.md).
 
 See [local AI setup and troubleshooting](docs/LOCAL_AI.md).
 
