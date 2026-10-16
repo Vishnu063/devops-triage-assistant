@@ -3,13 +3,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import secrets
+import time
 from .integrations import catalog
 from .evidence import correlate
 from . import ai
 from .investigation import demo_report, overview, answer, share_summary, QUESTIONS
+from .operations import setup_status, compare, escalation
 
 
-def make_handler(engine, token, port, factory=None, configurations=None, wizard=None):
+def make_handler(engine, token, port, factory=None, configurations=None, wizard=None, profiles=None, select_profile=None):
     allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
     allowed_origins = {f"http://{host}" for host in allowed_hosts}
 
@@ -58,6 +60,20 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                     raise ValueError("Sample mode cannot access live actions; leave sample mode first")
                 if self.path == "/api/tools":
                     return self.respond(200, {"default": getattr(engine.adapter, "tool", "linux"), "tools": catalog(configurations or {})})
+                if self.path == "/api/profiles":
+                    return self.respond(200,profiles.listing() if profiles else {"current":"default","profiles":[{"name":"default","environment":"unspecified","tools":[]} ]})
+                if self.path in ("/api/profiles/create","/api/profiles/select"):
+                    if profiles is None or select_profile is None:raise ValueError("Environment profiles unavailable in this session")
+                    with engine.connect() as db:
+                        for raw,status in db.execute("SELECT payload,status FROM plans WHERE status IN ('pending','approved','executing')"):
+                            if status=='executing' or json.loads(raw)['expires_at']>time.time():raise ValueError("Finish or cancel active repair plans before changing profiles")
+                    if self.path.endswith('create'):
+                        return self.respond(200,profiles.create(body.get('name'),body.get('environment')))
+                    return self.respond(200,select_profile(body.get('name')))
+                if self.path == "/api/benchmark":
+                    if body.get('enabled') is not True:raise ValueError('Enable local AI explicitly before benchmarking')
+                    from .benchmark import benchmark
+                    return self.respond(200,benchmark(body.get('model',ai.DEFAULT_MODEL),1))
                 if self.path == "/api/ai/status":
                     return self.respond(200, ai.status())
                 if self.path == "/api/demo":
@@ -70,6 +86,8 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                 selected = body.get("tool", getattr(engine.adapter, "tool", "linux"))
                 if not isinstance(selected, str):
                     raise ValueError("Tool ID must be a string")
+                if self.path == "/api/doctor":
+                    return self.respond(200,setup_status(selected,(configurations or {}).get(selected)))
                 if self.path in ("/api/connection/schema", "/api/connection/save"):
                     if wizard is None:raise ValueError("Connection wizard is unavailable")
                     if self.path.endswith("schema"):
@@ -77,7 +95,21 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
                     if not isinstance(body.get("config"),dict):raise ValueError("Connection config must be an object")
                     return self.respond(200,wizard.save(selected,body["config"]))
                 active = factory(selected) if factory else engine
-                if self.path in ("/api/investigate", "/api/summary"):
+                if self.path == "/api/bundle":
+                    result=active.scan(True);result['overview']=overview(result)
+                    result['handoff']=active.store.handoff(result['incident_id'],active.adapter.target)
+                elif self.path == "/api/recheck":
+                    before=active.store.get_scan(body.get('incident'),active.adapter.target)
+                    result=active.scan(bool(before.get('deep_evidence')) or body.get('deep') is True)
+                    result['comparison']=compare(before,result);result['overview']=overview(result)
+                elif self.path == "/api/compare":
+                    result=compare(active.store.get_scan(body.get('before'),active.adapter.target),active.store.get_scan(body.get('after'),active.adapter.target))
+                elif self.path == "/api/incidents":
+                    result=active.store.search(active.adapter.target,body.get('query',''),body.get('status','all'))
+                elif self.path == "/api/handoff":
+                    report=active.store.get_scan(body.get('incident'),active.adapter.target)
+                    result=active.store.handoff(report['incident_id'],active.adapter.target)
+                elif self.path in ("/api/investigate", "/api/summary"):
                     _, report = active.store.latest(active.adapter.target)
                     if not report or not body.get("incident") or report.get("incident_id") != body["incident"]:
                         raise ValueError("Run fresh checks for this target before investigating it")
@@ -143,11 +175,11 @@ def make_handler(engine, token, port, factory=None, configurations=None, wizard=
     return Handler
 
 
-def serve(engine, port, factory=None, configurations=None, wizard=None):
+def serve(engine, port, factory=None, configurations=None, wizard=None, profiles=None, select_profile=None):
     if not 1 <= port <= 65535:
         raise ValueError("Port must be between 1 and 65535")
     token = secrets.token_hex(32)
-    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(engine, token, port, factory, configurations, wizard))
+    server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(engine, token, port, factory, configurations, wizard, profiles, select_profile))
     server.daemon_threads = True
     print(f"Dashboard: http://127.0.0.1:{port} — default target: {engine.adapter.target}")
     try:
