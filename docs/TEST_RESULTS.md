@@ -1,8 +1,18 @@
-# Test results — v0.3, 2026-10-16
+# Test results — v0.4, 2026-10-17
 
-**203 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 206 cases: those 203 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
+**232 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 236 cases: those 232 plus three opt-in Docker cases and one opt-in Kubernetes case, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
 
 Command: `python -m unittest discover -s tests -v`
+
+## Operations update
+
+Local discovery: **236 cases, 232 passed, four opt-in acceptance cases skipped** (three Docker and one Kubernetes). The new tests cover ownership-scoped Kubernetes failure types and deployment comparisons, private-body exclusion, denied-versus-missing configuration, bounded/incomplete results, profile target isolation, private profile saves, repair follow-up comparisons, linked escalation outcomes, incident search, CI failure policies, prerequisite guidance and synthetic benchmark behavior.
+
+**Real Kubernetes acceptance passed** on an owned disposable kind v0.33.0 / Kubernetes v1.37.0 cluster: [passing run](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/38963666307). It verified actual probe events, image-pull failures, missing referenced configuration, a mismatching selected Service, and retained revision image comparison. Diagnosis performed no repairs; the owned namespace and cluster were cleaned up. This is scoped lab compatibility, not production certification.
+
+**Real CPU inference completed** with Ollama 0.40.5 and `qwen2.5:0.5b`: [initial measured run](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/38963682749). Linux x86_64, four reported vCPUs: Docker OOM 4.827 s, Kubernetes image 2.200 s, Linux disk 2.808 s. Sampled peak process-tree RSS was 561,311,744 bytes (~535 MiB); peak reported loaded-model size was 458,804,427 bytes (~438 MiB). Sampling can miss peaks or double-count shared pages; these are not universal RAM requirements.
+
+**Human review rejected the initial answers as reliable diagnoses.** They included unsupported healthy/unhealthy application claims, claimed image presence without evidence, mislabeled load average as a percentage and downplayed 96% disk usage. [Raw synthetic-case measurements and review](OLLAMA_INITIAL_BENCHMARK.json) are retained for regression tests. Known contradictory/unsupported patterns are now withheld from normal explanations; guided findings remain available. This is not complete factual validation, and other errors can pass. A completed benchmark is separate from accepted explanation count and does not certify answer quality. The [real rerun with withholding enabled](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/38964514501) completed all three cases and withheld all three explanations (`accepted_explanations=0`, `quality_gate=known_contradictions_detected`). The default model should be treated as experimental; deterministic guided evidence remains the recommended path. The expanded [real desktop/mobile browser suite passed](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/38965024165), covering profiles, prerequisite hints, evidence bundles, rechecks, incident search, escalation downloads and actual local Linux checks after selecting a named environment. Desktop/mobile screenshots were visually reviewed; no browser script errors or horizontal mobile overflow were reported. Python 3.11/3.12/3.13, package, documentation and real Docker checks also passed on implementation commit `15959dda46950f530da0d9523a3c725d8d140467`.
 
 ## First-use and investigation update
 

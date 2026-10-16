@@ -41,9 +41,19 @@ Requests go directly to numeric loopback port 11434 using the [Ollama chat API](
 
 The summary includes only finding codes, numeric disk/memory/load measurements, known log signature counts and collection/application flags. It omits raw evidence text, observed resource names, URLs, credentials and configuration. Normal repair approval and verification logic remain independent of model text. Output is advisory plain text; review it before any manual action.
 
-Automated tests cover summary privacy, unavailable/missing models, cloud model exclusion, malformed/oversized responses, request serialization, CPU/context/unload options, authenticated dashboard requests, incident matching, diagnosis without AI and the local HTTP contract. No actual model inference or model answer quality was tested in this environment.
+Automated tests cover summary privacy, unavailable/missing models, cloud model exclusion, malformed/oversized responses, request serialization, CPU/context/unload options, authenticated dashboard requests, incident matching, diagnosis without AI and the local HTTP contract. The local unit suite does not run an actual model. A separate disposable CPU-runner acceptance workflow benchmarks real inference; consult [test results](TEST_RESULTS.md) for the latest measured evidence and limits.
 
 
 ## Guided incident questions
 
 The dashboard also supports six evidence-based topics without any model. After a live scan, choose a topic or type a short question. With AI enabled, **Also ask local AI** requests a separate explanation. The model receives the canonical topic rather than your raw text. Unsupported topics do not invoke AI. Demo questions never invoke Ollama. This is bounded guidance, not an autonomous investigation agent or unrestricted multi-turn LLM chat.
+
+
+## Measure before choosing a model
+
+Run `bash start.sh ai-benchmark` after installing your model, or use **Benchmark one sample** with AI enabled. See [benchmark measurements and limits](OPERATIONS.md#real-local-model-benchmark). Keyword checks are not a quality score, and RAM measurements on a CI runner are not a requirement for every computer.
+
+
+## Measured small-model limitation
+
+Real CPU testing completed, but human review found unsupported health claims and unsafe interpretation of a 96%-used disk. Known contradiction patterns are now withheld and the original guided findings remain available. These checks cover selected overclaims only; other errors can still pass. The default remains AI off. See [measured evidence](OLLAMA_INITIAL_BENCHMARK.json) and [test results](TEST_RESULTS.md). A successful benchmark transport does not mean its answers are accepted.

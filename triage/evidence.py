@@ -23,7 +23,9 @@ def log_signals(raw):
 
 def annotate(report):
     signals=report.get('deep_evidence',{}).get('log_signals',{})
+    from .operations import severity
     for finding in report['findings']:
+        finding['severity']=severity(finding)
         observed=finding['code'] not in ('collection-failed','no-evidence','missing-evidence','incomplete')
         cause='possible';basis='The condition is observed; the underlying cause is a hypothesis.'
         if finding['code'].endswith(':oom'):
@@ -37,6 +39,9 @@ def annotate(report):
 
 def deep_evidence(adapter):
     tool=getattr(adapter,'tool','linux')
+    if tool=='kubernetes':
+        from .kubernetes import collect
+        return collect(adapter)
     result={'supported':tool in ('docker','podman','kubernetes'),'log_signals':{},'events':[],'errors':[]}
     if not result['supported']:
         result['scope']='No bounded deep collector implemented for this profile; baseline metrics/state and scan-to-scan changes remain available.'
@@ -75,6 +80,39 @@ class IncidentStore:
         with self.engine.connect() as db:
             row=db.execute('SELECT incident,payload FROM incident_steps WHERE target=? AND kind=? ORDER BY id DESC LIMIT 1',(target,kind)).fetchone()
         return (row[0],json.loads(row[1])) if row else (None,None)
+    def get_scan(self,incident,target):
+        if not isinstance(incident,str) or len(incident)>80:raise ValueError('Invalid incident ID')
+        with self.engine.connect() as db:
+            row=db.execute("SELECT payload FROM incident_steps WHERE incident=? AND target=? AND kind='scan' ORDER BY id DESC LIMIT 1",(incident,target)).fetchone()
+        if not row:raise ValueError('Scan not found for this exact target/profile')
+        return json.loads(row[0])
+    def handoff(self,incident,target):
+        from .operations import escalation
+        report=self.get_scan(incident,target)
+        steps=[s for s in self.timeline(incident) if s['target']==target]
+        for link in list(steps):
+            if link['kind']=='related_repair':
+                parent=link['data']['incident']
+                self.get_scan(parent,target)
+                steps.extend(s for s in self.timeline(parent) if s['target']==target and s['kind'] in ('repair_result','rollback_result'))
+        return escalation(report,steps)
+    def search(self,target,query='',status='all'):
+        if not isinstance(query,str) or len(query)>100 or status not in ('all','findings','clear','verified','needs_attention'):raise ValueError('Invalid search query or status filter')
+        with self.engine.connect() as db:
+            rows=db.execute("SELECT incident,time,payload FROM incident_steps WHERE target=? AND kind='scan' ORDER BY id DESC LIMIT 500",(target,)).fetchall()
+            outcomes=db.execute("SELECT incident,payload FROM incident_steps WHERE target=? AND kind IN ('repair_result','rollback_result') ORDER BY id DESC LIMIT 2000",(target,)).fetchall()
+        latest={}
+        for incident,raw in outcomes:latest.setdefault(incident,json.loads(raw).get('status'))
+        result=[]
+        for incident,stamp,raw in rows:
+            report=json.loads(raw);codes=[f['code'] for f in report.get('findings',[])];outcome=latest.get(incident)
+            if query.casefold() not in (' '.join(codes)+' '+incident).casefold():continue
+            if status=='findings' and not codes or status=='clear' and codes:continue
+            if status in ('verified','needs_attention') and outcome!=status:continue
+            result.append({'incident':incident,'time':stamp,'finding_codes':codes,'repair_status':outcome or 'no_recorded_result',
+                           'application_healthy':report.get('application_health',{}).get('healthy')})
+            if len(result)>=50:break
+        return {'results':result,'scope':'Latest 500 scans on this exact target/profile; up to 50 matches. Verified means only the recorded repair verification scope.'}
     def scan(self,report):
         target=report['target'];_,previous=self.latest(target)
         def view(value):
@@ -87,6 +125,10 @@ class IncidentStore:
         changes=[{'field':key,'before':before.get(key,[]),'after':after.get(key,[])} for key in sorted(set(before)|set(after)) if previous and before.get(key)!=after.get(key)]
         incident=uuid.uuid4().hex
         report['incident_id']=incident;report['changes_since_previous_scan']=changes
+        report['previous_incident_id']=previous.get('incident_id') if previous else None
+        if previous:
+            from .operations import compare
+            report['comparison']=compare(previous,report)
         report['change_scope']='Differences between collected samples, not an audit log or proof of who changed the resource.'
         self.record(incident,target,'scan',report)
         if changes:self.record(incident,target,'observed_changes',changes)

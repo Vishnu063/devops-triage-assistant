@@ -91,6 +91,7 @@ class ToolAdapter:
         self.tool = tool
         self.profile = PROFILES[tool]
         allowed = set(requirements(self.profile)) | {"application_health"}
+        if tool == "kubernetes": allowed |= {"service"}
         if self.profile["endpoint"]:
             allowed |= {"base_url", "headers", "basic_auth"}
         if set(config) - allowed:
@@ -110,6 +111,8 @@ class ToolAdapter:
         if "application_health" in config:
             from .health import validate_health
             validate_health(config["application_health"])
+        if tool == "kubernetes" and "service" in config and (not isinstance(config['service'],str) or not re.fullmatch(r'[a-z0-9]([-a-z0-9.]*[a-z0-9])?',config['service']) or len(config['service'])>253):
+            raise ValueError('service must be one explicit Kubernetes Service name')
         self.config = dict(config)
         for key in requirements(self.profile):
             value = config.get(key)
@@ -213,11 +216,14 @@ class ToolAdapter:
             return "HTTP 429: rate limited. Check provider quotas and wait before an operator-triggered retry."
         return f"HTTP {code}: service request failed. Inspect provider/service status and API compatibility."
 
-    def command(self, recipe, *, repair=False, include_stderr=False):
+    def command(self, recipe, *, repair=False, include_stderr=False, read_timeout=None):
         argv = [self.render(item) for item in recipe]
         cwd = self.render(self.profile["cwd"]) if self.profile["cwd"] else None
         env = dict(os.environ, AWS_PAGER="", PAGER="cat", GIT_TERMINAL_PROMPT="0", CI="true")
         limit = 120 if repair else 60
+        if read_timeout is not None:
+            if repair or type(read_timeout) is not int or not 1<=read_timeout<=60:raise ValueError('Invalid read timeout')
+            limit=read_timeout
         try:
             process = subprocess.Popen(argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)

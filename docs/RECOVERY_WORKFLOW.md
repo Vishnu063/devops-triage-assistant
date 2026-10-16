@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Connection wizard | CLI setup and browser forms, required fields, environment-based API authentication, private atomic save, immediate runtime update | It does not acquire credentials or install CLIs. Linux SSH/service settings remain startup flags. |
 | Live validation | Explicit read-only collector check, missing CLI/credential/permission errors, configured application probe; Kubernetes can-i authorization review for deployment patch | Other mutation permissions are not exercised. A passing collector does not certify all permissions or tool health. |
-| Deeper diagnosis | Baseline metrics/state, changes since previous scan, opt-in Docker/Podman log signatures and Kubernetes Deployment events/log signatures, correlation of up to four chosen sources | No inferred topology. Deep collection is not yet available for all tools. Raw log lines and event messages are not persisted. |
+| Deeper diagnosis | Baseline metrics/state, changes since previous scan, opt-in Docker/Podman log signatures and Kubernetes owned pod/ReplicaSet evidence, bounded events/log signatures and optional Service/configuration checks, correlation of up to four chosen sources | No inferred topology. Deep collection is not yet available for all tools. Raw log lines and event messages are not persisted. |
 | Confidence | Confirmed observations, possible causes, corroborated evidence, explanation of missing causal evidence | No fabricated probability or automatic claim of proven root cause. |
 | Fix preview | Captured before-state, exact operation, impact, expected verification and health policy | Descriptive preview, not a provider dry run or guarantee. |
 | Rollback | Separately planned/approved restoration of a captured Kubernetes Deployment revision after failed recovery | No automatic rollback, no rollback for restart-only containers/Linux or CI retries, no schema/database reversal. |
@@ -62,7 +62,7 @@ devops-triage timeline
 devops-triage alerts
 ```
 
-Use --config when the connection file is not the default. Deep collection is explicit and may require separate logs/events permissions. Docker/Podman capture signature counts from at most the last 100 log lines; Kubernetes captures bounded workload log signatures and Deployment-owned event metadata. Missing data is reported. Messages, source snippets, runtime environment values and raw log text are not stored in incidents.
+Use --config when the connection file is not the default. Deep collection is explicit and may require separate logs/events permissions. Docker/Podman capture signature counts from at most the last 100 log lines; Kubernetes captures bounded workload log signatures, Deployment-owned ReplicaSets/pods, selected owned-object event signatures, referenced configuration existence and an optionally named Service selector; see [operations](OPERATIONS.md) for bounds and exact permissions. Missing data is reported. Messages, source snippets, runtime environment values and raw log text are not stored in incidents.
 
 Changes are differences between collected samples. They do not identify the actor, exact change time or causal relationship. Correlation only uses the sources you select; confirm they represent related workloads and investigate the causal sequence yourself.
 
@@ -100,3 +100,8 @@ The Incident timeline displays recorded evidence, differences, previews, approva
 ## Validation status
 
 Feature behavior is covered by automated synthetic-resource and disposable loopback endpoint tests. These tests do not substitute for live provider acceptance, real production recovery or rendered browser QA. Configure authorized disposable targets and use Validate connection before proposing a repair.
+
+
+## Comparisons and handoffs
+
+Supported repairs and rollback attempt a fresh evidence sample after recording their original verification outcome when a baseline incident exists. Follow-up collection failures are reported separately. Use the dashboard comparison or `recheck` after manual changes. Profiles, incident search, filtered escalation reports and CI policies are documented in [everyday operations](OPERATIONS.md).

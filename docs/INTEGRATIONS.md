@@ -16,7 +16,7 @@ Read-only means no intended resource mutation. Native CLIs may update local cred
 | containerd | containerd | Task inventory in one namespace | namespace, socket | Suggestions/runbook only |
 | compose | Docker Compose | Services in one explicit Compose project | context, directory, project | Suggestions/runbook only |
 | buildah | Buildah | Working-container state | resource | Suggestions/runbook only |
-| kubernetes | Kubernetes | One Deployment's desired and available replicas | context, namespace, resource | rollout-restart |
+| kubernetes | Kubernetes | One Deployment's baseline state; opt-in owned-pod/events/configuration/revision checks | context, namespace, resource; optional service | rollout-restart |
 | helm | Helm | Release status and revision | context, namespace, resource | Suggestions/runbook only |
 | kustomize | Kustomize | Renderability and manifest kind inventory; no manifest bodies retained | directory | Suggestions/runbook only |
 | argocd | Argo CD | Application health, sync, and operation phase | resource, server | Suggestions/runbook only |
@@ -89,3 +89,6 @@ API URLs require HTTPS except localhost/loopback tunnels. TLS validation stays e
 - Gitleaks CLI: https://github.com/gitleaks/gitleaks
 
 References describe interfaces; synthetic tests are not evidence of live provider acceptance.
+
+
+Kubernetes deep checks follow controller owner UIDs and exclude Secret values and raw log/event bodies. See [exact collector bounds and limitations](OPERATIONS.md). Existence does not establish required key validity; Service selector checks do not establish endpoints or traffic health.

@@ -85,6 +85,25 @@ def evidence_summary(report):
             'scope': 'Filtered sample only. No raw logs, configuration, identity, topology or change history.'}
 
 
+def contradictions(text,summary):
+    """Reject known overclaims only; this is deliberately not a general fact checker."""
+    value=text.lower();flags=[]
+    if summary['application_healthy'] is not True and re.search(r'\b(?:application|service|system|container|deployment)(?:\s+health)?\s+(?:is|was|appears|seems|:)\s+(?:fully\s+|currently\s+)?healthy\b',value):
+        flags.append('unsupported_application_health_claim')
+    if summary['application_healthy'] is not False and re.search(r'\b(?:application|service|system)\s+(?:is|was|appears|seems)\s+(?:not healthy|unhealthy)\b',value):
+        flags.append('unsupported_application_failure_claim')
+    disk=summary['metrics'].get('disk_used_percent')
+    if (disk is not None and disk>=90 or 'disk-pressure' in summary['finding_codes']) and re.search(r'disk[^.\n]{0,90}(?:within acceptable limits|normal|healthy|sufficient space)',value):
+        flags.append('disk_pressure_downplayed')
+    if re.search(r'\bimage\s+(?:is\s+|was\s+)?(?:present|available|exists)\b',value):
+        flags.append('unsupported_image_existence_claim')
+    if summary['finding_codes'] and re.search(r'\bno (?:issues|problems|findings)\b',value):
+        flags.append('findings_dismissed')
+    if 'load1' in summary['metrics'] and re.search(r'\bload\s*[:=]?\s*[0-9.]+\s*%',value):
+        flags.append('load_average_reported_as_percentage')
+    return flags
+
+
 def explain(report, model=DEFAULT_MODEL, question=None):
     model = model_name(model)
     # The caller supplies a canonical topic, never the user's raw chat input.
@@ -109,7 +128,11 @@ def explain(report, model=DEFAULT_MODEL, question=None):
         content = message.get('content') if isinstance(message, dict) else None
         if response.get('done') is not True or not isinstance(content, str) or not content.strip() or len(content) > 12000:
             raise ValueError('Incomplete or invalid model response')
-        return dict(result, status='ok', explanation=content.strip())
+        flags=contradictions(content,evidence_summary(report))
+        if flags:
+            return dict(result,status='unreliable',validation_flags=flags,metrics={key:response[key] for key in ('total_duration','load_duration','prompt_eval_count','eval_count','eval_duration') if type(response.get(key)) is int},
+                        message='Model explanation withheld because it contradicted or overclaimed the filtered evidence. Use guided findings and checks. These pattern checks do not detect every possible model error.')
+        return dict(result, status='ok', explanation=content.strip(),metrics={key:response[key] for key in ('total_duration','load_duration','prompt_eval_count','eval_count','eval_duration') if type(response.get(key)) is int})
     except (OSError, ValueError, http.client.HTTPException):
         return dict(result, status='unavailable', message='Local AI is unavailable, timed out or returned an invalid response. Check Ollama and the installed model. Normal diagnosis remains available.')
     finally:

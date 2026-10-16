@@ -1,0 +1,56 @@
+name: Local Ollama acceptance benchmark
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/operations-workflows]
+    paths:
+      - .github/workflows/ollama.yml
+      - triage/benchmark.py
+      - triage/ai.py
+permissions:
+  contents: read
+concurrency:
+  group: ollama-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  cpu-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OLLAMA_HOST: 127.0.0.1:11434
+      OLLAMA_NO_CLOUD: '1'
+      CUDA_VISIBLE_DEVICES: '-1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install .
+      - name: Install official Ollama distribution in the disposable runner directory
+        run: |
+          mkdir -p "$RUNNER_TEMP/triage-ollama"
+          curl -fL --retry 2 --max-time 240 https://ollama.com/download/ollama-linux-amd64.tar.zst -o "$RUNNER_TEMP/ollama.tar.zst"
+          tar --zstd -xf "$RUNNER_TEMP/ollama.tar.zst" -C "$RUNNER_TEMP/triage-ollama"
+      - name: Benchmark a real small CPU model on synthetic incidents
+        env:
+          OLLAMA_MODELS: ${{ runner.temp }}/triage-ollama-models
+        run: |
+          mkdir -p "$RUNNER_TEMP/triage-ollama-results"
+          "$RUNNER_TEMP/triage-ollama/bin/ollama" serve > "$RUNNER_TEMP/triage-ollama-results/server.log" 2>&1 &
+          triage_ollama_pid=$!
+          trap 'kill "$triage_ollama_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:11434/api/tags > /dev/null; then break; fi
+            sleep 1
+          done
+          "$RUNNER_TEMP/triage-ollama/bin/ollama" --version > "$RUNNER_TEMP/triage-ollama-results/version.txt"
+          "$RUNNER_TEMP/triage-ollama/bin/ollama" pull qwen2.5:0.5b
+          curl -fsS http://127.0.0.1:11434/api/tags > "$RUNNER_TEMP/triage-ollama-results/model-tags.json"
+          python -m triage.cli ai-benchmark --model qwen2.5:0.5b --cases 3 --ollama-pid "$triage_ollama_pid" > "$RUNNER_TEMP/triage-ollama-results/benchmark.json"
+          cat "$RUNNER_TEMP/triage-ollama-results/benchmark.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ollama-cpu-benchmark
+          path: ${{ runner.temp }}/triage-ollama-results/
+          if-no-files-found: ignore

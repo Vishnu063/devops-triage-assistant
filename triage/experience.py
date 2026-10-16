@@ -9,15 +9,21 @@ from .evidence import IncidentStore, annotate, deep_evidence
 
 
 class ExperienceEngine:
-    def __init__(self,core,health=None):
+    def __init__(self,core,health=None,context=None):
         self.core=core
+        self.context=context or {"profile":"default","environment":"unspecified"}
         self.health=validate_health(health)
         self.store=IncidentStore(core)
     def __getattr__(self,name):
         return getattr(self.core,name)
     def scan(self,deep=False):
         report=self.core.scan()
-        if deep:report['deep_evidence']=deep_evidence(self.adapter)
+        report['context']=self.context
+        if deep:
+            report['deep_evidence']=deep_evidence(self.adapter)
+            report['findings'].extend(report['deep_evidence'].get('findings',[]))
+        from .operations import setup_status
+        report['setup_help']=setup_status(getattr(self.adapter,'tool','linux'),getattr(self.adapter,'config',{}),report['snapshot'].get('errors',[])+report.get('deep_evidence',{}).get('errors',[]),linux_target=getattr(getattr(self.adapter,'_adapter',self.adapter),'target','local'))
         report['application_health']=check_health(self.health)
         if report['application_health']['healthy'] is False:
             report['findings'].append({'code':'application-health','title':'Configured application endpoint did not meet its health policy',
@@ -48,6 +54,7 @@ class ExperienceEngine:
         p=self.core.plan(action)
         incident,_=self.store.latest(self.adapter.target)
         p['incident_id']=incident or uuid.uuid4().hex
+        p['before_incident_id']=incident
         p['health_policy_hash']=fingerprint(self.health)
         p['application_health']=self.health
         snapshot=getattr(self.adapter,'last_snapshot',{})
@@ -102,8 +109,20 @@ class ExperienceEngine:
         self.store.alert(p['incident_id'],'info' if result['status']=='verified' else 'warning',
                          'Recovery '+result['status']+' for plan '+plan_id,self.adapter.target)
         result['incident_id']=p['incident_id']
+        self._follow_up(p,result)
         result['rollback_available']=self._can_rollback(p,snapshot) and result['status']=='needs_attention'
         return result
+    def _follow_up(self,p,result):
+        if p.get('before_incident_id'):
+            try:
+                from .operations import compare
+                before=self.store.get_scan(p['before_incident_id'],self.adapter.target)
+                after=self.scan(bool(before.get('deep_evidence')))
+                result['comparison']=compare(before,after)
+                self.store.record(p['incident_id'],self.adapter.target,'post_repair_comparison',result['comparison'])
+                self.store.record(after['incident_id'],self.adapter.target,'related_repair',{'incident':p['incident_id']})
+            except (ValueError,RuntimeError,OSError):
+                result['comparison_error']='Post-repair evidence could not be collected. Run fresh checks; the recorded repair result is unchanged.'
     def _can_rollback(self,p,snapshot):
         if getattr(self.adapter,'tool',None)!='kubernetes' or not snapshot:return False
         source=p.get('rollback_source',{});obs=snapshot.get('observations',{})
@@ -124,7 +143,7 @@ class ExperienceEngine:
         revision=str(parent['rollback_source']['revision'][0])
         command=['kubectl','--context','$context','--namespace','$namespace','rollout','undo','deployment/$resource','--to-revision='+revision]
         p={'id':uuid.uuid4().hex,'target':self.adapter.target,'service':'kubernetes','tool':'kubernetes','kind':'rollback',
-           'parent_id':parent_id,'incident_id':parent['incident_id'],'state_hash':self.adapter.state_hash(current),
+           'parent_id':parent_id,'incident_id':parent['incident_id'],'before_incident_id':self.store.latest(self.adapter.target)[0],'state_hash':self.adapter.state_hash(current),
            'expires_at':time.time()+300,'command':[self.adapter.render(x) for x in command],
            'expected_template_hash':parent['rollback_source']['template_hash'],
            'health_policy_hash':fingerprint(self.health),'application_health':self.health,
@@ -181,5 +200,6 @@ class ExperienceEngine:
             db.execute('UPDATE plans SET status=? WHERE id=?',(status,p['id']))
             self.core.event(db,p['id'],status,'rollback')
         self.store.record(p['incident_id'],self.adapter.target,'rollback_result',result)
+        self._follow_up(p,result)
         self.store.alert(p['incident_id'],'info' if status=='verified' else 'warning','Rollback '+status+' for plan '+p['id'],self.adapter.target)
         return result
