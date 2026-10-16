@@ -130,7 +130,7 @@ def explain(report, model=DEFAULT_MODEL, question=None):
             raise ValueError('Incomplete or invalid model response')
         flags=contradictions(content,evidence_summary(report))
         if flags:
-            return dict(result,status='unreliable',validation_flags=flags,
+            return dict(result,status='unreliable',validation_flags=flags,metrics={key:response[key] for key in ('total_duration','load_duration','prompt_eval_count','eval_count','eval_duration') if type(response.get(key)) is int},
                         message='Model explanation withheld because it contradicted or overclaimed the filtered evidence. Use guided findings and checks. These pattern checks do not detect every possible model error.')
         return dict(result, status='ok', explanation=content.strip(),metrics={key:response[key] for key in ('total_duration','load_duration','prompt_eval_count','eval_count','eval_duration') if type(response.get(key)) is int})
     except (OSError, ValueError, http.client.HTTPException):
