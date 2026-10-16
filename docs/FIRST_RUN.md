@@ -55,3 +55,8 @@ Click **Docker out of memory**, **Kubernetes image pull** or **Linux disk full**
 Choose **Leave sample mode** when ready. Use the integration search to find one tool, follow **Setup checklist**, save its connection and validate read access. The connection banner distinguishes missing settings, saved settings, checked access and collected evidence. A collector's successful read does not establish full tool health.
 
 After checks, the overview separates finding count, collection completeness and application health. Use **What next?** for concrete investigation steps. AI is optional and disabled by default. Finish or cancel a pending repair plan before switching incidents.
+
+
+## Everyday controls
+
+Use **Check setup** if a connection fails. **Collect evidence bundle** requests bounded deeper evidence. After a change, **Check again and compare** shows differences and application-health flags. **Find previous incidents** searches the selected target; **Download escalation report** prepares a filtered handoff. Save separate environment profiles when switching targets and review the copied settings before use. See [operations](OPERATIONS.md) for commands, CI exit codes and limits.
