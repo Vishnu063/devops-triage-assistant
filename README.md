@@ -2,7 +2,7 @@
 
 Understand live evidence, investigate likely causes, and review a specific repair before approving it.
 
-**v0.3: Linux plus 60 tool profiles, connection setup and incident recovery workflows.** Automated coverage includes profiles, approval controls, health policies, previews, rollback and incident history. Provider responses and resource mutations are simulated; live provider acceptance remains pending. See [test results and limits](docs/TEST_RESULTS.md).
+**v0.3: Linux plus 60 tool profiles, connection setup and incident recovery workflows.** Automated coverage includes profiles, approval controls, health policies, previews, rollback and incident history. Most provider responses and resource mutations use fixtures. Docker also has three passing real acceptance cases in a disposable GitHub CI lab; production and other-tool acceptance remain pending. See [test results and limits](docs/TEST_RESULTS.md) and the [disposable Docker lab](docs/DOCKER_LAB.md).
 
 ## What you can do
 
@@ -140,6 +140,6 @@ External changes can occur between state inspection and command execution. Use a
 
 ## Build and development status
 
-CI builds a wheel and runs the automated suite on Python 3.11, 3.12 and 3.13 for normal pushes/PRs. The suite includes 60 individually named synthetic-response profile tests, tool repair/approval tests, bounded native-process transport tests and real loopback HTTP tests. A manual run can enable `run_tests`. The earlier `[skip tests]` marker is absent from this verification update.
+CI builds a wheel and runs the automated suite on Python 3.11, 3.12 and 3.13 for normal pushes/PRs. The suite includes 60 individually named synthetic-response profile tests, tool repair/approval tests, bounded native-process transport tests and real loopback HTTP tests. A separate CI job opts into three real Docker diagnosis/recovery cases on owned disposable containers. A manual run can enable `run_tests`. The earlier `[skip tests]` marker is absent from this verification update.
 
 See [integration coverage](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md), [contributing](CONTRIBUTING.md), and [security reporting](SECURITY.md).

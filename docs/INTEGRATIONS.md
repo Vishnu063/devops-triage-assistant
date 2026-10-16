@@ -1,6 +1,6 @@
 # Integration coverage
 
-All profiles below have collector and diagnosis code with automated synthetic-response coverage. **Live provider acceptance is still pending for all 60.** The full suite passes 175 tests locally; these tests do not establish compatibility with your deployed tool versions, credentials or environments. See TEST_RESULTS.md. Supported scope is deliberately narrow; this does not mean every error or service of a platform is covered.
+All profiles below have collector and diagnosis code with automated synthetic-response coverage. **Docker has scoped disposable CI acceptance; live acceptance of the other 59 products is pending.** The full suite passes 175 tests locally; these tests do not establish compatibility with your deployed tool versions, credentials or environments. See TEST_RESULTS.md. Supported scope is deliberately narrow; this does not mean every error or service of a platform is covered.
 
 Read-only means no intended resource mutation. Native CLIs may update local credential caches, scan databases, or use trusted provider/inventory plugins. Configure only trusted local projects and read-only credentials for diagnosis.
 
@@ -77,7 +77,7 @@ Kubernetes probes for up to six samples separated by two seconds. A rollout can 
 
 ## API compatibility and trust
 
-Profiles are based on common CLI/HTTP interfaces and tested with handwritten representative responses. They have not been validated against deployed provider versions. Missing CLIs, incompatible response schemas, empty projections, authorization failures, timeouts, oversized results and unsupported responses are surfaced rather than represented as healthy.
+Profiles are based on common CLI/HTTP interfaces and tested with handwritten representative responses. Except for the recorded disposable Docker lab, they have not been validated against deployed provider versions. Missing CLIs, incompatible response schemas, empty projections, authorization failures, timeouts, oversized results and unsupported responses are surfaced rather than represented as healthy.
 
 API URLs require HTTPS except localhost/loopback tunnels. TLS validation stays enabled, redirects are blocked, and environment HTTP proxies are not used. Native CLIs use their normal credential/configuration stores and explicit context selectors where supported. Do not put passwords, tokens or credential-bearing URLs in configuration.
 

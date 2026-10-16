@@ -1,8 +1,22 @@
 # Test results — v0.3, 2026-10-16
 
-**175 tests passed locally** on Linux with Python 3.12.14. The final full run completed successfully after the feature implementation and fixes.
+**175 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 178 cases: those 175 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
 
 Command: `python -m unittest discover -s tests -v`
+
+## Real Docker acceptance
+
+[Passing GitHub run](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/38878641638), source commit `1743f0907b78564558103d4f3754d1576b1fc476`, 2026-10-16. The package job and unit/API jobs on Python 3.11, 3.12 and 3.13 also passed.
+
+The Docker job used an explicitly local Unix socket and owned disposable Python HTTP-server containers. All three cases passed:
+
+- Real inspect metadata, bounded stderr log signatures, private-field exclusion, application health and incident history.
+- Real stopped-container diagnosis, rejection before approval, lab-only explicit approval, actual restart, consecutive application health verification, replay rejection and success alert.
+- Independent state change invalidating a previously created repair plan.
+
+The first live run failed its recovery health check. The lab had used an automatically assigned Docker host port, which was unsuitable for the fixed endpoint across a restart. Assigning and checking a stable loopback port fixed the lab; no product approval or health logic was bypassed. See DOCKER_LAB.md for isolation, cleanup and opt-in instructions.
+
+This validates this scoped Docker workflow in the CI environment, not arbitrary Docker installations or production availability. No user-owned production container was touched.
 
 ## Coverage
 
@@ -36,6 +50,6 @@ The suite retains checks for Kafka empty-ISR parsing, Semgrep scan errors, malfo
 
 ## Remaining acceptance work
 
-No authorized live external provider connections were supplied. Therefore, live behavior for the 60 products, deployed CLI/API versions, private CA/TLS environments, actual recovery/rollback, sustained application behavior, remote SSH and rendered browser QA remain unverified. Use the new connection wizard and explicit Validate connection action with disposable authorized targets.
+No authorized user-owned live provider connections were supplied. Beyond the scoped disposable Docker acceptance above, the other 59 products, deployed CLI/API variants, private CA/TLS environments, real Kubernetes rollback, sustained application behavior, remote SSH and rendered browser QA remain unverified. Use the new connection wizard and explicit Validate connection action with disposable authorized targets.
 
 GitHub Actions builds the wheel and runs the suite on Python 3.11, 3.12 and 3.13. Check the Actions result for this verification commit; a previous package-only build does not establish test success.

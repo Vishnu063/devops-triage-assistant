@@ -7,7 +7,8 @@ Linux and all 60 scoped tool profiles have implementation and automated coverage
 3. Implemented: bounded deep evidence for Docker/Podman/Kubernetes, sample comparisons, selected-source correlation and explanatory confidence labels.
 4. Implemented: exact repair previews, optional application endpoint policies, separately approved captured-revision Kubernetes rollback, incident timeline and local alerts.
 5. Completed locally: 175 automated tests, wheel build/install and installed dashboard smoke checks with live local Linux and a disposable health endpoint.
-6. Pending: configured live provider/native-tool acceptance, real resource recovery/rollback and rendered browser QA.
-7. Future depth: additional platform services, more deep collectors, topology-aware correlation, more independently reviewed actions and broader application-level verification.
+6. Completed in CI: three real Docker acceptance cases, including an actual approved restart and application recovery on an owned disposable container.
+7. Pending: user-owned environment acceptance, the other 59 tool integrations, real Kubernetes rollback and rendered browser QA.
+8. Future depth: additional platform services, more deep collectors, topology-aware correlation, more independently reviewed actions and broader application-level verification.
 
 See RECOVERY_WORKFLOW.md for exact feature boundaries, INTEGRATIONS.md for each tool's scope, and TEST_RESULTS.md for evidence.
