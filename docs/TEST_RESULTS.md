@@ -1,8 +1,14 @@
 # Test results — v0.3, 2026-10-16
 
-**188 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 191 cases: those 188 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
+**203 unit/API tests passed locally** on Linux with Python 3.12.14. Normal discovery now finds 206 cases: those 203 plus three opt-in Docker cases, skipped locally where Docker is unavailable. **All three real Docker acceptance cases passed separately on GitHub CI.** The final full run completed successfully after the feature implementation and fixes.
 
 Command: `python -m unittest discover -s tests -v`
+
+## First-use and investigation update
+
+Local full discovery: **206 cases, 203 passed, three opt-in Docker cases skipped**. Fifteen new tests verify isolated synthetic samples, bounded guided questions, no chat-authorized execution, incomplete evidence and application-health wording, filtered summary export, CLI demo independence, authenticated sample APIs, latest-incident matching, and canonical-topic-only Ollama follow-ups.
+
+The updated wheel built successfully. JavaScript syntax, relative Markdown links and whitespace checks passed. Local browser launch was unavailable because the Chromium download failed. The new **Dashboard first-use checks** workflow exercises real desktop/mobile sample flows, guided questions, integration search, missing-connection errors, connection wizard, live Linux diagnosis and filtered downloads, and uploads screenshots. Consult that workflow's result for rendered browser verification; unit tests alone do not establish visual quality.
 
 ## Optional local Ollama update
 
