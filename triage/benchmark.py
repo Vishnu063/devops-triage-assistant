@@ -51,12 +51,14 @@ def benchmark(model=ai.DEFAULT_MODEL,cases=3,ollama_pid=None):
             result['cases'].append({'scenario':scenario,'latency_ms':round((time.monotonic()-start)*1000),
                 'status':response['status'],'explanation':text,'metrics':response.get('metrics',{}),
                 'topic_keyword_present':any(word in text.lower() for word in keywords),
-                'review_required':True,'message':response.get('message')})
+                'review_required':True,'validation_flags':response.get('validation_flags',[]),'message':response.get('message')})
     finally:
         stop.set();thread.join(timeout=4)
     memory=[n for n in samples if n is not None]
     result['peak_ollama_process_tree_rss_bytes']=max(memory) if memory else None
     result['peak_reported_model_bytes']=max(sizes) if sizes else None
-    result['status']='completed' if all(c['status']=='ok' for c in result['cases']) else 'incomplete'
+    result['status']='completed' if all(c['status'] in ('ok','unreliable') for c in result['cases']) else 'incomplete'
+    result['accepted_explanations']=sum(c['status']=='ok' for c in result['cases'])
+    result['quality_gate']='known_contradictions_detected' if any(c['status']=='unreliable' for c in result['cases']) else 'human_review_still_required'
     result['manual_review']='Review each answer for unsupported root-cause claims, missing evidence and unsafe advice before using this model operationally.'
     return result
