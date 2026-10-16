@@ -24,7 +24,7 @@ def parser():
     sub.add_parser('tools');sub.add_parser('setup',help='Interactive connection wizard')
     sub.add_parser('validate',help='Validate scoped read access without changing resources')
     sub.add_parser('health',help='Check the configured application endpoint')
-    diagnose=sub.add_parser('diagnose');diagnose.add_argument('--deep',action='store_true')
+    diagnose=sub.add_parser('diagnose');diagnose.add_argument('--deep',action='store_true');diagnose.add_argument('--ai',action='store_true',help='Ask local Ollama to explain filtered findings');diagnose.add_argument('--ai-model',default='qwen2.5:0.5b',help='Installed local Ollama model')
     group=sub.add_parser('correlate',help='Compare up to four explicitly selected sources')
     group.add_argument('tools',nargs='+');group.add_argument('--deep',action='store_true')
     plan=sub.add_parser('plan');plan.add_argument('action_name')
@@ -67,7 +67,11 @@ def main():
         if args.action=='web':
             from .web import serve
             serve(engine,args.port,lambda tool:make_engine(args,configurations,tool),configurations,wizard);return
-        if args.action=='diagnose':result=engine.scan(args.deep)
+        if args.action=='diagnose':
+            result=engine.scan(args.deep)
+            if args.ai:
+                from .ai import explain
+                result['ai']=explain(result,args.ai_model)
         elif args.action=='validate':result=engine.validate_connection()
         elif args.action=='health':result=check_health(engine.health)
         elif args.action=='correlate':
