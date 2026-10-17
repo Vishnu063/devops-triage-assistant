@@ -36,6 +36,9 @@ def parser():
     handoff=sub.add_parser('handoff',help='Export a filtered escalation report');handoff.add_argument('--incident')
     comparison=sub.add_parser('compare',help='Compare two stored scans of the same target');comparison.add_argument('--before');comparison.add_argument('--after')
     recheck=sub.add_parser('recheck',help='Collect a fresh sample and compare it with an earlier scan');recheck.add_argument('--before');recheck.add_argument('--deep',action='store_true')
+    preflight=sub.add_parser('preflight',help='Review Kubernetes Deployment JSON offline before deployment')
+    preflight.add_argument('manifest',help='Local JSON object or Kubernetes List (max 1 MiB)')
+    preflight.add_argument('--fail-on',choices=['none','warning','critical','any'],default='critical')
     sub.add_parser('tools');sub.add_parser('setup',help='Interactive connection wizard')
     sub.add_parser('validate',help='Validate scoped read access without changing resources')
     sub.add_parser('health',help='Check the configured application endpoint')
@@ -71,6 +74,12 @@ def make_engine(args,configurations,tool=None):
 def main():
     p=parser();args=p.parse_args()
     try:
+        if args.action=='preflight':
+            from .preflight import load, review, exit_code
+            result=review(load(args.manifest));print(json.dumps(result,indent=2))
+            code=exit_code(result,args.fail_on)
+            if code:p.exit(code,'Preflight review incomplete.\n' if code==2 else 'Preflight findings matched the failure policy.\n')
+            return
         if args.action=='demo':
             from .investigation import demo_report, overview
             sample=demo_report(args.scenario);sample['overview']=overview(sample)
