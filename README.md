@@ -65,6 +65,17 @@ To use the `devops-triage` commands shown below directly, activate the environme
 
 No live connection is attempted by `tools`. Configuration templates and tool metadata do not establish connection health. Authentication uses your existing credential stores or environment variables.
 
+## Pre-deployment checks
+
+Review Kubernetes Deployment JSON locally before applying it:
+
+```bash
+bash start.sh preflight examples/preflight-deployment.json
+bash start.sh preflight deployment.json --fail-on warning
+```
+
+Catch selector mismatches, missing image references, mutable images, missing explicit readiness/resource requests and rollout risks. Required configuration references outside the input remain explicitly unverified. No cluster, AI or API key needed. CLI only; offline heuristics do not prove registry existence, scheduling capacity or deployment safety. [Input, CI policies and limits](docs/PREFLIGHT.md).
+
 ## Everyday troubleshooting
 
 - **Collect evidence bundle:** one action for bounded state, events, log signatures and configured application checks.
