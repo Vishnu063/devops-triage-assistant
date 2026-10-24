@@ -252,3 +252,8 @@ External changes can occur between state inspection and command execution. Use a
 CI builds a wheel and runs the automated suite on Python 3.11, 3.12 and 3.13 for normal pushes/PRs. The suite includes 60 individually named synthetic-response profile tests, tool repair/approval tests, bounded native-process transport tests and real loopback HTTP tests. A separate CI job opts into three real Docker diagnosis/recovery cases on owned disposable containers. A manual run can enable `run_tests`. The earlier `[skip tests]` marker is absent from this verification update.
 
 See [integration coverage](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md), [contributing](CONTRIBUTING.md), and [security reporting](SECURITY.md).
+
+
+## Optional five-project ecosystem API
+
+The existing diagnostics now expose versioned incident contracts, bounded event delivery, evidence-referenced explanations and reusable verification through `triage.ecosystem`. No model or new service is required. Ops Pilot retains approval ownership; no alert or model can authorize repair. [Configuration, commands and limits](docs/ECOSYSTEM.md). New deterministic contract/outbox/verification regression tests are in `tests/test_ecosystem.py`; network and disposable infrastructure results are recorded by the integration CI, never inferred from these tests. Native diagnostics and standalone commands remain available.
