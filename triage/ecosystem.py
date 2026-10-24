@@ -175,10 +175,12 @@ def k8sgpt(context, namespace, enabled=False):
     for value in (context,namespace):
         if not isinstance(value,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}',value):raise ValueError('Exact Kubernetes scope required')
     # No --explain: deterministic analyzer output, no configured provider is invoked.
-    with tempfile_output() as output:
+    try:
+      with tempfile_output() as output:
         result=subprocess.run(['k8sgpt','analyze','--kubecontext',context,'--namespace',namespace,'--output','json'],
             stdout=output,stderr=subprocess.DEVNULL,timeout=20,check=False)
         output.seek(0);raw=output.read(LIMIT+1)
+    except (OSError,subprocess.TimeoutExpired):return {'status':'inconclusive','executable':False}
     if result.returncode or len(raw)>LIMIT:return {'status':'inconclusive','executable':False}
     return {'status':'observed','executable':False,'untrusted':True,'evidence':redact(json.loads(raw))}
 
