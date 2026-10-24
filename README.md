@@ -257,3 +257,14 @@ See [integration coverage](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTU
 ## Optional five-project ecosystem API
 
 The existing diagnostics now expose versioned incident contracts, bounded event delivery, evidence-referenced explanations and reusable verification through `triage.ecosystem`. No model or new service is required. Ops Pilot retains approval ownership; no alert or model can authorize repair. [Configuration, commands and limits](docs/ECOSYSTEM.md). New deterministic contract/outbox/verification regression tests are in `tests/test_ecosystem.py`; network and disposable infrastructure results are recorded by the integration CI, never inferred from these tests. Native diagnostics and standalone commands remain available.
+
+Ecosystem evidence: [package/Python matrix/real Docker](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/40071772942), [desktop/mobile browser](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/40071772947), and [actual five-project recovery](https://github.com/Vishnu063/ops-pilot/actions/runs/40074300156). Optional K8sGPT/provider/model acceptance is not inferred from deterministic checks. [Shared architecture/results and exact source refs](https://github.com/Vishnu063/ops-pilot/blob/feat/unified-devops-engineer/docs/ECOSYSTEM-RESULTS.md).
+
+```mermaid
+flowchart LR
+  C[CloudLaunch / alerts / lab evidence] --> T[Versioned Triage API]
+  T --> D[Evidence-referenced diagnosis + verification]
+  D --> O[Ops Pilot approval orchestration]
+  T -. optional read-only .-> K[Installed K8sGPT]
+```
+
