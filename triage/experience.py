@@ -4,7 +4,7 @@ import re
 import time
 import uuid
 from .engine import fingerprint
-from .health import check_health, validate_health
+from .health import check_health, validate_health, verify_health
 from .evidence import IncidentStore, annotate, deep_evidence
 
 
@@ -95,7 +95,7 @@ class ExperienceEngine:
         self.store.record(p['incident_id'],self.adapter.target,'execution_requested',{'id':plan_id})
         result=self.core.apply(plan_id)
         result['infrastructure_status']=result['status']
-        result['application_health']=check_health(self.health)
+        result['application_health']=verify_health(self.health)
         if result['application_health']['healthy'] is False:
             result['status']='needs_attention'
             result['failure_reason']='The configured application health policy failed after the repair.'
@@ -191,7 +191,7 @@ class ExperienceEngine:
                 if snapshot['observations'].get('template_hash')==p['expected_template_hash'] and self.adapter.verify(snapshot):
                     state_ok=True;break
         except (RuntimeError,ValueError,OSError):failure='Rollback dispatch or verification failed; inspect live state before another action'
-        health=check_health(self.health)
+        health=verify_health(self.health)
         if state_ok and health['healthy'] is False:failure='Rollback restored the template, but the application health policy failed'
         status='verified' if state_ok and health['healthy'] is not False else 'needs_attention'
         result={'id':p['id'],'kind':'rollback','status':status,'application_health':health,

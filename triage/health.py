@@ -11,13 +11,16 @@ from .integrations import NoRedirect, ToolAdapter, ENV_NAME
 def validate_health(config):
     if config is None:
         return None
-    if not isinstance(config, dict) or set(config) - {'url','expected_status','json_path','equals','attempts','successes','timeout','interval','headers'}:
+    if not isinstance(config, dict) or set(config) - {'url','expected_status','json_path','equals','attempts','successes','timeout','interval','headers','recovery_timeout_seconds'}:
         raise ValueError('Unsupported application_health configuration')
     ToolAdapter.validate_base_url(config.get('url',''))
     for name, default, low, high in [('attempts',3,1,5),('successes',2,1,3),('timeout',3,1,5),('interval',1,0,2)]:
         value=config.get(name,default)
         if type(value) is not int or not low <= value <= high:
             raise ValueError(f'Invalid health setting: {name}')
+    recovery = config.get('recovery_timeout_seconds', 0)
+    if type(recovery) is not int or not 0 <= recovery <= 60:
+        raise ValueError('recovery_timeout_seconds must be an integer between 0 and 60')
     if config.get('successes',2)>config.get('attempts',3):
         raise ValueError('Health successes cannot exceed attempts')
     statuses=config.get('expected_status',[200])
@@ -75,3 +78,30 @@ def check_health(config):
     return {'configured':True,'healthy':consecutive>=config.get('successes',2),'samples':samples,
             'required_consecutive_successes':config.get('successes',2),
             'scope':'Configured endpoint/status and optional JSON assertion only; not a full business transaction test'}
+
+
+def verify_health(config):
+    """Bounded readiness polling after one repair. Never retries the repair."""
+    if not config or not config.get('recovery_timeout_seconds'):
+        return check_health(config)
+    validate_health(config)
+    started = time.monotonic()
+    deadline = started + config['recovery_timeout_seconds']
+    samples = []
+    consecutive = 0
+    required = config.get('successes', 2)
+    while time.monotonic() < deadline:
+        remaining = deadline - time.monotonic()
+        probe = dict(config, attempts=1, successes=1, interval=0,
+                     timeout=max(1, min(config.get('timeout', 3), int(remaining))))
+        result = check_health(probe)
+        samples.extend(result['samples'])
+        consecutive = consecutive + 1 if result['healthy'] else 0
+        if consecutive >= required:
+            break
+        if time.monotonic() < deadline:
+            time.sleep(min(max(0.1, config.get('interval', 1)), max(0, deadline-time.monotonic())))
+    return {'configured': True, 'healthy': consecutive >= required, 'samples': samples,
+            'required_consecutive_successes': required,
+            'elapsed_seconds': round(time.monotonic()-started, 3),
+            'scope': 'Bounded post-repair readiness checks; one repair attempt, no automatic retry or rollback'}

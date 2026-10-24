@@ -1,5 +1,11 @@
 # DevOps Triage Assistant
 
+## Optional ecosystem integration
+
+Reusable structured diagnosis and optional deterministic K8sGPT adapter extend the existing engine. Bounded post-repair readiness polling verifies slow startups without retrying the approved repair. AI remains optional and disabled by default.
+
+[Architecture, configuration, test evidence and known limits](docs/ECOSYSTEM.md).
+
 [Reviewer walkthrough](INTERVIEW.md) · [Portfolio](https://github.com/Vishnu063/Vishnu063/blob/main/PORTFOLIO.md)
 
 Investigate a failing container or deployment with evidence, guided questions and optional local AI. Review the exact repair before approving it.
