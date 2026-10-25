@@ -268,3 +268,8 @@ flowchart LR
   T -. optional read-only .-> K[Installed K8sGPT]
 ```
 
+
+## Self-hosted integration review (2026-10-25)
+
+[Ops Pilot setup and read-only permission guide](https://github.com/Vishnu063/ops-pilot/blob/feat/public-selfhosted-readiness/docs/SELF-HOSTING.md) · [Current cross-project readiness and actual evidence](https://github.com/Vishnu063/ops-pilot/blob/feat/public-selfhosted-readiness/docs/PUBLIC-READINESS.md).
+Ops Pilot reuses this package's native ToolAdapter, Kubernetes deep evidence, findings/confidence, bounded HTTP and optional deterministic K8sGPT adapter. Its new desk adds no mutation API; executable Docker recovery remains separately approval-gated. EC2, Helm and ArgoCD collector fixtures establish parser/command behavior, not actual external account access. The shared ecosystem contract remains compatible.
