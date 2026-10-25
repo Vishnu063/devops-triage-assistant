@@ -72,6 +72,16 @@ class KubernetesDeepTests(unittest.TestCase):
         adapter=Adapter();adapter.pod['status']['containerStatuses']=[{'state':{'waiting':{'reason':'CrashLoopBackOff'}}},{'state':{'waiting':{'reason':'CreateContainerConfigError'}}}]
         codes={f['code'] for f in collect(adapter)['findings']}
         self.assertIn('kubernetes:crash-loop',codes);self.assertIn('kubernetes:configuration',codes)
+    def test_repeated_current_failed_exits_between_backoffs_are_observed(self):
+        adapter=Adapter();adapter.pod['status']['containerStatuses']=[{'restartCount':3,'state':{'terminated':{'reason':'Error','exitCode':7}}}]
+        result=collect(adapter)
+        self.assertIn('kubernetes:crash-loop',{f['code'] for f in result['findings']})
+        self.assertEqual(result['pods'][0]['failed_exit_codes'],[7])
+    def test_one_exit_or_old_failure_on_healthy_running_container_is_not_crash_loop(self):
+        for state in [{'restartCount':1,'state':{'terminated':{'reason':'Error','exitCode':7}}},
+                      {'restartCount':3,'state':{'running':{'startedAt':'2020-01-01T00:00:00Z'}},'lastState':{'terminated':{'reason':'Error','exitCode':7,'finishedAt':'2020-01-01T00:00:00Z'}}}]:
+            adapter=Adapter();adapter.pod['status']['containerStatuses']=[state]
+            self.assertNotIn('kubernetes:crash-loop',{f['code'] for f in collect(adapter)['findings']})
     def test_missing_optional_reference_is_not_an_incident(self):
         adapter=Adapter();adapter.dep['spec']['template']['spec']['containers'][0]['env'][1]['valueFrom']['secretKeyRef']['optional']=True
         adapter.last_snapshot['observations']['template_hash']=[fingerprint(adapter.dep['spec']['template'])]
