@@ -148,7 +148,10 @@ class IncidentStore:
             return [dict(zip(('id','time','incident','severity','message','acknowledged'),row)) for row in db.execute('SELECT id,time,incident,severity,message,acknowledged FROM alerts ORDER BY time DESC LIMIT 100')]
     def timeline(self,incident=None):
         with self.engine.connect() as db:
-            rows=db.execute('SELECT incident,target,time,kind,payload FROM incident_steps '+('WHERE incident=? ' if incident else '')+'ORDER BY id DESC LIMIT 100',(incident,) if incident else ()).fetchall()
+            if incident:
+                rows=db.execute('SELECT incident,target,time,kind,payload FROM incident_steps WHERE incident=? ORDER BY id DESC LIMIT 100',(incident,)).fetchall()
+            else:
+                rows=db.execute('SELECT incident,target,time,kind,payload FROM incident_steps ORDER BY id DESC LIMIT 100').fetchall()
         return [dict(incident=i,target=t,time=stamp,kind=k,data=json.loads(p)) for i,t,stamp,k,p in rows]
 
 
