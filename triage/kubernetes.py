@@ -2,6 +2,7 @@
 import json
 import re
 import time
+from datetime import datetime
 from .engine import fingerprint
 from .integrations import redact
 
@@ -117,17 +118,27 @@ def collect(adapter):
         if len(pods)>20:raise ValueError('More than 20 owned pods; narrow the supported workload scope')
         result['deployment_changes']=deployment_changes(dep,rss)
         for pod in pods:
-            status=pod.get('status',{});summary={'uid':pod['metadata']['uid'],'phase':status.get('phase'), 'waiting_reasons':[], 'termination_reasons':[]}
+            status=pod.get('status',{});summary={'uid':pod['metadata']['uid'],'phase':status.get('phase'), 'waiting_reasons':[], 'termination_reasons':[], 'restart_counts':[], 'failed_exit_codes':[]}
             for c in status.get('containerStatuses',[])+status.get('initContainerStatuses',[]):
                 wait=c.get('state',{}).get('waiting',{}).get('reason')
-                terminated=c.get('state',{}).get('terminated',{}).get('reason') or c.get('lastState',{}).get('terminated',{}).get('reason')
-                if wait in ('ImagePullBackOff','ErrImagePull','CrashLoopBackOff','CreateContainerConfigError'):summary['waiting_reasons'].append(wait)
-                if terminated=='OOMKilled':summary['termination_reasons'].append(terminated)
+                termination=c.get('state',{}).get('terminated') or c.get('lastState',{}).get('terminated') or {}
+                terminated=termination.get('reason')
+                if isinstance(wait,str):summary['waiting_reasons'].append(wait[:80])
+                if isinstance(terminated,str):summary['termination_reasons'].append(terminated[:80])
+                restarts=c.get('restartCount',0);exit_code=termination.get('exitCode')
+                if type(restarts) is int:summary['restart_counts'].append(restarts)
+                recent_restart=False
+                try:
+                    started=datetime.fromisoformat(c.get('state',{}).get('running',{})['startedAt'].replace('Z','+00:00')).timestamp()
+                    finished=datetime.fromisoformat(termination['finishedAt'].replace('Z','+00:00')).timestamp()
+                    recent_restart=0<=time.time()-started<=60 and 0<=time.time()-finished<=120
+                except (KeyError,TypeError,ValueError):pass
+                if type(exit_code) is int and exit_code!=0 and type(restarts) is int and restarts>=2 and (c.get('state',{}).get('terminated') or recent_restart):summary['failed_exit_codes'].append(exit_code)
             result['pods'].append(summary)
             if any(v in ('ImagePullBackOff','ErrImagePull') for v in summary['waiting_reasons']):
                 finding('image-pull','Owned pod cannot pull its image','Image reference, registry credentials or network access may be wrong.', ['Inspect this pod’s events to distinguish missing image, authorization and connectivity.','Verify the exact image tag/digest and imagePullSecret references.'],summary)
-            if 'CrashLoopBackOff' in summary['waiting_reasons']:
-                finding('crash-loop','Owned pod is in a restart backoff','The application repeatedly exits; the backoff alone does not identify why.', ['Inspect previous container exit status and bounded logs.','Check configuration, dependencies and resource limits before a restart.'],summary)
+            if 'CrashLoopBackOff' in summary['waiting_reasons'] or summary['failed_exit_codes']:
+                finding('crash-loop','Owned pod has restart backoff or repeated failed exits','The runtime records a restart backoff or at least two restarts with a nonzero prior exit. Samples between backoffs may show terminated/running state; the cause is not established.', ['Inspect previous container exit status and bounded logs.','Check configuration, dependencies and resource limits before a restart.'],summary)
             if 'OOMKilled' in summary['termination_reasons']:
                 finding('oom','Runtime recorded an OOM termination','The cgroup or node memory pressure may have terminated the container.', ['Compare limits, requests and peak memory usage.','Investigate application memory growth.'],summary)
             if 'CreateContainerConfigError' in summary['waiting_reasons']:

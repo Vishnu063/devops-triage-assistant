@@ -252,3 +252,24 @@ External changes can occur between state inspection and command execution. Use a
 CI builds a wheel and runs the automated suite on Python 3.11, 3.12 and 3.13 for normal pushes/PRs. The suite includes 60 individually named synthetic-response profile tests, tool repair/approval tests, bounded native-process transport tests and real loopback HTTP tests. A separate CI job opts into three real Docker diagnosis/recovery cases on owned disposable containers. A manual run can enable `run_tests`. The earlier `[skip tests]` marker is absent from this verification update.
 
 See [integration coverage](docs/INTEGRATIONS.md), [architecture](docs/ARCHITECTURE.md), [roadmap](docs/ROADMAP.md), [contributing](CONTRIBUTING.md), and [security reporting](SECURITY.md).
+
+
+## Optional five-project ecosystem API
+
+The existing diagnostics now expose versioned incident contracts, bounded event delivery, evidence-referenced explanations and reusable verification through `triage.ecosystem`. No model or new service is required. Ops Pilot retains approval ownership; no alert or model can authorize repair. [Configuration, commands and limits](docs/ECOSYSTEM.md). New deterministic contract/outbox/verification regression tests are in `tests/test_ecosystem.py`; network and disposable infrastructure results are recorded by the integration CI, never inferred from these tests. Native diagnostics and standalone commands remain available.
+
+Ecosystem evidence: [package/Python matrix/real Docker](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/40071772942), [desktop/mobile browser](https://github.com/Vishnu063/devops-triage-assistant/actions/runs/40071772947), and [actual five-project recovery](https://github.com/Vishnu063/ops-pilot/actions/runs/40074300156). Optional K8sGPT/provider/model acceptance is not inferred from deterministic checks. [Shared architecture/results and exact source refs](https://github.com/Vishnu063/ops-pilot/blob/feat/unified-devops-engineer/docs/ECOSYSTEM-RESULTS.md).
+
+```mermaid
+flowchart LR
+  C[CloudLaunch / alerts / lab evidence] --> T[Versioned Triage API]
+  T --> D[Evidence-referenced diagnosis + verification]
+  D --> O[Ops Pilot approval orchestration]
+  T -. optional read-only .-> K[Installed K8sGPT]
+```
+
+
+## Self-hosted integration review (2026-10-25)
+
+[Ops Pilot setup and read-only permission guide](https://github.com/Vishnu063/ops-pilot/blob/feat/public-selfhosted-readiness/docs/SELF-HOSTING.md) · [Current cross-project readiness and actual evidence](https://github.com/Vishnu063/ops-pilot/blob/feat/public-selfhosted-readiness/docs/PUBLIC-READINESS.md).
+Ops Pilot reuses this package's native ToolAdapter, Kubernetes deep evidence, findings/confidence, bounded HTTP and optional deterministic K8sGPT adapter. Its new desk adds no mutation API; executable Docker recovery remains separately approval-gated. EC2, Helm and ArgoCD collector fixtures establish parser/command behavior, not actual external account access. The shared ecosystem contract remains compatible.

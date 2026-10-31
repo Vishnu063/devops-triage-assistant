@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -35,3 +35,4 @@ jobs:
           name: dashboard-browser-screenshots
           path: ${{ runner.temp }}/triage-browser-artifacts/*.png
           if-no-files-found: ignore
+
